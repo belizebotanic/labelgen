@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>labelgen tests</title>
+  <style>body{font-family:system-ui;margin:1rem;}</style>
+</head>
+<body>
+  <h1>labelgen tests</h1>
+  <div id="out"></div>
+  <script type="importmap">
+  {
+    "imports": {
+      "lit": "https://esm.sh/lit@3.2.0",
+      "lit/": "https://esm.sh/lit@3.2.0/",
+      "lz-string": "https://esm.sh/lz-string@1.5.0",
+      "papaparse": "https://esm.sh/papaparse@5.4.1"
+    }
+  }
+  </script>
+  <script type="module">
+    import { runAll } from './runner.js';
+    // Test imports — each file registers its describe() blocks on import.
+    await import('./smoke.test.js');
+    // Additional test files will be added here as the plan progresses:
+    // await import('./template.test.js');
+    // await import('./placeholders.test.js');
+    // await import('./units.test.js');
+    // await import('./share-url.test.js');
+    // await import('./layout.test.js');
+    // await import('./svg.test.js');
+    runAll(document.getElementById('out'));
+  </script>
+</body>
+</html>
