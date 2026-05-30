@@ -10,5 +10,8 @@ node_modules/
 devenv.local.nix
 .direnv/
 
+# .envrc is a local opt-in (symlink to .envrc.devenv); not committed
+.envrc
+
 # @web/dev-server local cache (if any)
 .web-dev-server/
