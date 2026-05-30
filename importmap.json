@@ -1,8 +1,0 @@
-{
-  "imports": {
-    "lit": "https://esm.sh/lit@3.2.0",
-    "lit/": "https://esm.sh/lit@3.2.0/",
-    "lz-string": "https://esm.sh/lz-string@1.5.0",
-    "papaparse": "https://esm.sh/papaparse@5.4.1"
-  }
-}
