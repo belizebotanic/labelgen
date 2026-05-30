@@ -1,4 +1,4 @@
-import { describe, test, assertEq, assertTrue } from './runner.js';
+import { describe, test, assertEq } from './runner.js';
 import * as Storage from '../model/storage.js';
 import * as T from '../model/template.js';
 
