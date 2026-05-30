@@ -1,0 +1,15 @@
+{
+  "name": "labelgen",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Browser-based visual SVG label-sheet editor",
+  "scripts": {
+    "dev": "web-dev-server --config web-dev-server.config.mjs",
+    "test": "web-dev-server --config web-dev-server.config.mjs --open /tests/"
+  },
+  "devDependencies": {
+    "@web/dev-server": "^0.4.6",
+    "@web/dev-server-hmr": "^0.4.1"
+  }
+}
