@@ -7,22 +7,12 @@
         content="default-src 'self';
                  script-src 'self' https://esm.sh;
                  style-src 'self' 'unsafe-inline';
-                 connect-src https: ;
+                 connect-src https: ws://localhost:8000 wss://localhost:8000;
                  img-src 'self' data: ;
                  base-uri 'self';
-                 object-src 'none';
-                 frame-ancestors 'none';">
+                 object-src 'none';">
   <link rel="stylesheet" href="./styles.css">
-  <script type="importmap">
-  {
-    "imports": {
-      "lit": "https://esm.sh/lit@3.2.0",
-      "lit/": "https://esm.sh/lit@3.2.0/",
-      "lz-string": "https://esm.sh/lz-string@1.5.0",
-      "papaparse": "https://esm.sh/papaparse@5.4.1"
-    }
-  }
-  </script>
+  <script type="importmap" src="./importmap.json"></script>
   <script type="module" src="./app.js"></script>
 </head>
 <body>
