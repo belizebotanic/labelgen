@@ -91,6 +91,12 @@ function textNode(s) {
   else if (s.align === 'right')  t.setAttribute('text-anchor', 'end');
   else                            t.setAttribute('text-anchor', 'middle');
   t.setAttribute('dominant-baseline', s.baseline === 'middle' ? 'central' : s.baseline);
+  if (s.bandIdx != null) {
+    t.setAttribute('data-band', s.bandIdx);
+    t.setAttribute('data-row',  s.rowIdx);
+    t.setAttribute('data-cell', s.cellIdx);
+    t.style.cursor = 'pointer';
+  }
   // SAFETY: textContent escapes user input; never assign innerHTML.
   t.textContent = s.text;
   return t;

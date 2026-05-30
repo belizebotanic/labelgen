@@ -41,6 +41,21 @@ class LabelPreview extends LitElement {
 
   _setMode(m) { store.actions.setViewMode(m); }
 
+  _onClick(e) {
+    let n = e.target;
+    while (n && n !== e.currentTarget) {
+      if (n.dataset && n.dataset.band != null) {
+        store.actions.setSelection({
+          kind: 'cell',
+          path: [Number(n.dataset.band), Number(n.dataset.row), Number(n.dataset.cell)]
+        });
+        return;
+      }
+      n = n.parentNode;
+    }
+    store.actions.setSelection(null);
+  }
+
   render() {
     const { template, csvRows, activeRowIdx, viewMode } = this.state;
     const row = (csvRows && activeRowIdx != null) ? csvRows[activeRowIdx] : null;
@@ -59,7 +74,7 @@ class LabelPreview extends LitElement {
           ${csvRows ? `Row ${activeRowIdx + 1} of ${csvRows.length}` : 'No data loaded'}
         </span>
       </div>
-      <div class="surface">${svgEl}</div>
+      <div class="surface" @click=${this._onClick}>${svgEl}</div>
     `;
   }
 }
