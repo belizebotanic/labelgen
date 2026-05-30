@@ -1,0 +1,14 @@
+.DS_Store
+*.swp
+*.tmp
+node_modules/
+.idea/
+.vscode/
+
+# devenv / direnv state
+.devenv*
+devenv.local.nix
+.direnv/
+
+# @web/dev-server local cache (if any)
+.web-dev-server/
