@@ -1,5 +1,3 @@
-import { measureText } from './measure.js';
-import { pxToMm, ptToMm } from './units.js';
 import { substitute } from '../model/placeholders.js';
 
 const BAND_ORDER = { top: 0, middle: 1, bottom: 2 };
@@ -46,9 +44,7 @@ export function layoutLabel(template, row) {
 
   for (const [bandIdx, band] of bands.entries()) {
     const bandTop = contentY + bandH * bandPositions[band.name];
-    const bandBottom = bandTop + bandH;
-    const rowCount = band.rows.length;
-    const rowH = bandH / rowCount;
+    const rowH = bandH / band.rows.length;
 
     for (const [ri, row_] of band.rows.entries()) {
       const rowTop = bandTop + ri * rowH;

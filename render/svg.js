@@ -2,7 +2,6 @@ import { layoutLabel } from './layout.js';
 import { ptToMm } from './units.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const XML_NS = 'http://www.w3.org/XML/1998/namespace';
 
 export function renderLabel(template, row) {
   const W = template.label.width_mm;
