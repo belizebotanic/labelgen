@@ -1,0 +1,42 @@
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #fafafa;
+  --color-text: #1a1a1a;
+  --color-text-muted: #6b7280;
+  --color-border: #d4d4d4;
+  --color-accent: #2563eb;
+  --color-accent-soft: #dbeafe;
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 18px;
+
+  --border: 1px solid var(--color-border);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  height: 100%;
+}
+
+labelgen-app { display: block; height: 100%; }

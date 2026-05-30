@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>labelgen</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' https://esm.sh;
+                 style-src 'self' 'unsafe-inline';
+                 connect-src https: ;
+                 img-src 'self' data: ;
+                 base-uri 'self';
+                 object-src 'none';
+                 frame-ancestors 'none';">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "lit": "https://esm.sh/lit@3.2.0",
+      "lit/": "https://esm.sh/lit@3.2.0/",
+      "lz-string": "https://esm.sh/lz-string@1.5.0",
+      "papaparse": "https://esm.sh/papaparse@5.4.1"
+    }
+  }
+  </script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <labelgen-app></labelgen-app>
+</body>
+</html>
