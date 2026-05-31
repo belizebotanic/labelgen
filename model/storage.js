@@ -2,10 +2,30 @@ import { validate } from './template.js';
 
 const KEY = 'labelgen:template:v1';
 const CSV_KEY = 'labelgen:csv:v1';
+const LAST_HASH_KEY = 'labelgen:last-hash:v1';
 
 export function loadTemplate() { return _loadFrom(KEY); }
 export function saveTemplate(t) { return _saveTo(KEY, t); }
-export function clearTemplate() { localStorage.removeItem(KEY); }
+export function clearTemplate() {
+  try { localStorage.removeItem(KEY); } catch {}
+}
+
+/**
+ * Last-visit URL hash. Used to distinguish a refresh on the same URL
+ * (restore in-progress edits from localStorage) from a fresh navigation
+ * to the bare URL after viewing a share link (don't restore — start
+ * clean so share links don't leave ghosts in localStorage).
+ *
+ * Returns null if never set or if storage is disabled.
+ */
+export function loadLastHash() {
+  try { return localStorage.getItem(LAST_HASH_KEY); }
+  catch { return null; }
+}
+export function saveLastHash(hash) {
+  try { localStorage.setItem(LAST_HASH_KEY, hash); }
+  catch {}
+}
 
 /**
  * CSV row persistence. Stored shape: { rows: [{col:string,...}, ...] }.
@@ -14,7 +34,9 @@ export function clearTemplate() { localStorage.removeItem(KEY); }
  */
 export function loadCsvRows() { return _loadCsvFrom(CSV_KEY); }
 export function saveCsvRows(rows) { return _saveCsvTo(CSV_KEY, rows); }
-export function clearCsvRows() { localStorage.removeItem(CSV_KEY); }
+export function clearCsvRows() {
+  try { localStorage.removeItem(CSV_KEY); } catch {}
+}
 
 export function _loadCsvFrom(key) {
   let raw;

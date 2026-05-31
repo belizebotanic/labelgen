@@ -1,5 +1,9 @@
 import * as Template from './model/template.js';
-import { saveTemplate, loadTemplate, saveCsvRows, loadCsvRows } from './model/storage.js';
+import {
+  saveTemplate, loadTemplate, clearTemplate,
+  saveCsvRows, loadCsvRows, clearCsvRows,
+  saveLastHash, loadLastHash
+} from './model/storage.js';
 import { encode as encodeShare, decode as decodeShare } from './model/share-url.js';
 
 const DEBOUNCE_MS = 250;
@@ -111,6 +115,9 @@ store.subscribe(() => {
  */
 export function hydrate() {
   const fromUrl = decodeShare(location.hash);
+  const currentHash = location.hash || '';
+  const prevHash = loadLastHash();
+
   // Restore CSV from localStorage only when no remote data URL is in play —
   // a share-link dataUrl will overwrite csvRows once the fetch resolves, so
   // there is no point restoring local rows that would be immediately replaced.
@@ -124,16 +131,30 @@ export function hydrate() {
       }
     }
     store.setState(patch);
+    saveLastHash(currentHash);
     return { dataUrl: fromUrl.dataUrl ?? null, errors: fromUrl.errors };
   }
-  const patch = {};
-  const fromStorage = loadTemplate();
-  if (fromStorage) patch.template = fromStorage;
-  const savedCsv = loadCsvRows();
-  if (savedCsv && savedCsv.length > 0) {
-    patch.csvRows = savedCsv;
-    patch.activeRowIdx = 0;
+
+  // No template in the URL. Only restore from localStorage if this looks like
+  // a refresh of the same URL (or a first-ever visit, where prevHash is null
+  // and there is nothing to compare against). Otherwise the user just
+  // navigated away from a share link to the bare URL — show the empty
+  // default and clear stale persistence so it doesn't haunt future visits.
+  const sameAsLast = prevHash === null || prevHash === currentHash;
+  if (sameAsLast) {
+    const patch = {};
+    const fromStorage = loadTemplate();
+    if (fromStorage) patch.template = fromStorage;
+    const savedCsv = loadCsvRows();
+    if (savedCsv && savedCsv.length > 0) {
+      patch.csvRows = savedCsv;
+      patch.activeRowIdx = 0;
+    }
+    if (Object.keys(patch).length) store.setState(patch);
+  } else {
+    clearTemplate();
+    clearCsvRows();
   }
-  if (Object.keys(patch).length) store.setState(patch);
+  saveLastHash(currentHash);
   return { dataUrl: null, errors: fromUrl.errors };
 }
