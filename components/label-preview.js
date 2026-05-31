@@ -45,11 +45,47 @@ class LabelPreview extends LitElement {
       font-size: var(--font-size-sm);
       margin-left: auto;
     }
+
+    /* Frame holding the label and four "+" buttons around it. */
+    .canvas {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto 1fr auto;
+      gap: var(--space-2);
+      justify-items: center;
+      align-items: center;
+      padding: var(--space-3);
+    }
+    .canvas .top    { grid-column: 2; grid-row: 1; }
+    .canvas .bottom { grid-column: 2; grid-row: 3; }
+    .canvas .left   { grid-column: 1; grid-row: 2; }
+    .canvas .right  { grid-column: 3; grid-row: 2; }
+    .canvas .center { grid-column: 2; grid-row: 2; }
+
+    .add-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: var(--border);
+      background: var(--color-bg);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      color: var(--color-text);
+    }
+    .add-btn:not(:disabled):hover {
+      background: var(--color-accent-soft);
+      border-color: var(--color-accent);
+    }
+    .add-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
     .surface {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: var(--space-3);
+      padding: var(--space-2);
       background: white;
       border-radius: var(--radius-sm);
     }
@@ -58,20 +94,22 @@ class LabelPreview extends LitElement {
       max-height: 70vh;
       border: 1px dashed var(--color-border);
     }
-    /* Editor hit zones (single-label preview only). Invisible by default;
-       a soft tint appears when the whole label is hovered so the user
-       discovers them, and the zone the cursor is on darkens. */
-    .surface svg .lg-hit {
-      fill: var(--color-accent);
-      opacity: 0;
+
+    /* Cell overlay rects rendered inside the SVG (editor mode only). */
+    .surface svg .lg-cell-area {
+      fill: transparent;
+      stroke: var(--color-border);
+      stroke-width: 0.2;
+      stroke-dasharray: 1, 1;
+      pointer-events: all;
       cursor: pointer;
-      transition: opacity 80ms ease-out;
     }
-    .surface svg:hover .lg-hit {
-      opacity: 0.18;
+    .surface svg .lg-cell-area.selected {
+      stroke: var(--color-accent);
+      stroke-width: 0.4;
     }
-    .surface svg .lg-hit:hover {
-      opacity: 0.65;
+    .surface svg .lg-cell-area:hover {
+      stroke: var(--color-accent);
     }
   `;
 
@@ -80,21 +118,6 @@ class LabelPreview extends LitElement {
   _onClick(e) {
     let n = e.target;
     while (n && n !== e.currentTarget) {
-      // Hit-zone overlays — insert row / cell at a specific position.
-      const action = n.dataset?.action;
-      if (action === 'insertRow') {
-        store.actions.insertRowAt(Number(n.dataset.band), Number(n.dataset.atIdx));
-        return;
-      }
-      if (action === 'insertCell') {
-        store.actions.insertCellAt(
-          Number(n.dataset.band),
-          Number(n.dataset.row),
-          Number(n.dataset.atIdx)
-        );
-        return;
-      }
-      // Content shape — select the underlying cell.
       if (n.dataset && n.dataset.band != null && n.dataset.cell != null) {
         store.actions.setSelection({
           kind: 'cell',
@@ -107,9 +130,41 @@ class LabelPreview extends LitElement {
     store.actions.setSelection(null);
   }
 
+  _selectedCellPath() {
+    const sel = this.state.selection;
+    if (!sel || sel.kind !== 'cell') return null;
+    return sel.path;
+  }
+
+  _insertRowAbove() {
+    const p = this._selectedCellPath(); if (!p) return;
+    const [b, r, c] = p;
+    store.actions.insertRowAt(b, r);
+    store.actions.setSelection({ kind: 'cell', path: [b, r + 1, c] });
+  }
+  _insertRowBelow() {
+    const p = this._selectedCellPath(); if (!p) return;
+    const [b, r, c] = p;
+    store.actions.insertRowAt(b, r + 1);
+    // Selection's row index unchanged; the new row is below it.
+    store.actions.setSelection({ kind: 'cell', path: [b, r, c] });
+  }
+  _insertCellBefore() {
+    const p = this._selectedCellPath(); if (!p) return;
+    const [b, r, c] = p;
+    store.actions.insertCellAt(b, r, c);
+    store.actions.setSelection({ kind: 'cell', path: [b, r, c + 1] });
+  }
+  _insertCellAfter() {
+    const p = this._selectedCellPath(); if (!p) return;
+    const [b, r, c] = p;
+    store.actions.insertCellAt(b, r, c + 1);
+    store.actions.setSelection({ kind: 'cell', path: [b, r, c] });
+  }
+
   _breadcrumbText() {
     const sel = this.state.selection;
-    if (!sel) return 'Click a label element to select';
+    if (!sel) return 'Click a cell to select';
     const t = this.state.template;
     const bandName = (b) => t.content.bands[b]?.name ?? '?';
     if (sel.kind === 'band') return `${bandName(sel.path[0])} band`;
@@ -121,15 +176,15 @@ class LabelPreview extends LitElement {
   render() {
     const { template, csvRows, activeRowIdx, viewMode, selection } = this.state;
     const row = (csvRows && activeRowIdx != null) ? csvRows[activeRowIdx] : null;
+    const cellSelected = selection?.kind === 'cell';
     let svgEl;
     if (viewMode === 'grid') {
       const rows = csvRows ?? [];
       svgEl = renderSheet(template, rows);
     } else {
-      // Single-label preview uses the editor variant which adds hover-revealed
-      // "+ row" / "+ cell" hit zones. Grid view skips them — too dense.
-      svgEl = renderLabelEditor(template, row);
+      svgEl = renderLabelEditor(template, row, selection);
     }
+
     return html`
       <div class="toolbar">
         <button aria-pressed=${viewMode === 'single'} @click=${() => this._setMode('single')}>Single label</button>
@@ -139,7 +194,22 @@ class LabelPreview extends LitElement {
           ${csvRows ? `Row ${activeRowIdx + 1} of ${csvRows.length}` : 'No data loaded'}
         </span>
       </div>
-      <div class="surface" @click=${this._onClick}>${svgEl}</div>
+
+      ${viewMode === 'single' ? html`
+        <div class="canvas">
+          <button class="add-btn top"    title="Insert row above selected cell"
+                  ?disabled=${!cellSelected} @click=${this._insertRowAbove}>+</button>
+          <button class="add-btn left"   title="Insert cell before selected cell"
+                  ?disabled=${!cellSelected} @click=${this._insertCellBefore}>+</button>
+          <div class="surface center" @click=${this._onClick}>${svgEl}</div>
+          <button class="add-btn right"  title="Insert cell after selected cell"
+                  ?disabled=${!cellSelected} @click=${this._insertCellAfter}>+</button>
+          <button class="add-btn bottom" title="Insert row below selected cell"
+                  ?disabled=${!cellSelected} @click=${this._insertRowBelow}>+</button>
+        </div>
+      ` : html`
+        <div class="surface" @click=${this._onClick}>${svgEl}</div>
+      `}
     `;
   }
 }

@@ -2,9 +2,6 @@ import { substitute } from '../model/placeholders.js';
 
 const BAND_POSITIONS = { top: 0, middle: 1, bottom: 2 };
 
-// Hit zone thickness in mm for "+ row" / "+ cell" affordances.
-const HIT_ZONE_MM = 3;
-
 /**
  * Geometry helpers — used by both the content layout and the editor overlays so
  * both stay aligned to the same coordinate system.
@@ -108,102 +105,44 @@ export function layoutLabel(template, row) {
  * cells produce hit zones at the same boundary with the same `atIdx`; they
  * overlap visually but click the same action, so duplication is harmless.
  */
-function isTopmostBand(template, band) {
-  const me = BAND_POSITIONS[band.name];
-  return template.content.bands.every(b => (BAND_POSITIONS[b.name] ?? 0) >= me);
-}
-function isBottommostBand(template, band) {
-  const me = BAND_POSITIONS[band.name];
-  return template.content.bands.every(b => (BAND_POSITIONS[b.name] ?? 0) <= me);
-}
-
-export function layoutEditorOverlays(template) {
+/**
+ * Editor-mode cell-area overlays: a transparent rect per cell with a faint
+ * dashed border, used both for visual structure and as click-to-select hit
+ * targets. The selected cell is marked so the renderer can style it differently.
+ *
+ * @param {object} template
+ * @param {{kind:string, path:number[]} | null} selection
+ */
+export function layoutEditorOverlays(template, selection = null) {
   const out = [];
   const g = labelGeometry(template);
   const bands = template.content.bands ?? [];
 
+  const selBand = selection?.kind === 'cell' ? selection.path[0] : null;
+  const selRow  = selection?.kind === 'cell' ? selection.path[1] : null;
+  const selCell = selection?.kind === 'cell' ? selection.path[2] : null;
+
   for (const [bandIdx, band] of bands.entries()) {
     const bandTop = bandTopY(template, band);
     const rowH = g.bandH / band.rows.length;
-    const lastRowIdx = band.rows.length - 1;
 
     for (const [ri, row_] of band.rows.entries()) {
       const rowTop = bandTop + ri * rowH;
-      const rowBottom = rowTop + rowH;
-      const cellCount = row_.cells.length;
-      const cellW = g.contentW / cellCount;
-      const lastCellIdx = cellCount - 1;
-
-      // ---- Row hit zones (span full label width) ----
-
-      // "+ Row above" at atIdx = ri. If this is the first row of the topmost
-      // band, the zone extends up to the label's top edge.
-      const aboveExtend = ri === 0 && isTopmostBand(template, band);
-      const aboveTopY = aboveExtend ? 0 : rowTop - HIT_ZONE_MM / 2;
-      const aboveBotY = rowTop + HIT_ZONE_MM / 2;
-      out.push({
-        kind: 'hit',
-        action: 'insertRow',
-        bandIdx,
-        atIdx: ri,
-        x_mm: 0,
-        y_mm: aboveTopY,
-        w_mm: g.W,
-        h_mm: aboveBotY - aboveTopY
-      });
-
-      // "+ Row below" at atIdx = ri+1. If this is the last row of the
-      // bottommost band, the zone extends down to the label's bottom edge.
-      const belowExtend = ri === lastRowIdx && isBottommostBand(template, band);
-      const belowTopY = rowBottom - HIT_ZONE_MM / 2;
-      const belowBotY = belowExtend ? g.H : rowBottom + HIT_ZONE_MM / 2;
-      out.push({
-        kind: 'hit',
-        action: 'insertRow',
-        bandIdx,
-        atIdx: ri + 1,
-        x_mm: 0,
-        y_mm: belowTopY,
-        w_mm: g.W,
-        h_mm: belowBotY - belowTopY
-      });
-
-      // ---- Cell hit zones (span row height; outermost extend to label edge) ----
+      const cellW = g.contentW / row_.cells.length;
 
       for (const [ci] of row_.cells.entries()) {
         const cellLeft = g.contentX + ci * cellW;
-        const cellRight = cellLeft + cellW;
-
-        // "+ Cell before" at atIdx = ci
-        const beforeExtend = ci === 0;
-        const beforeLeftX  = beforeExtend ? 0 : cellLeft - HIT_ZONE_MM / 2;
-        const beforeRightX = cellLeft + HIT_ZONE_MM / 2;
+        const isSelected = bandIdx === selBand && ri === selRow && ci === selCell;
         out.push({
-          kind: 'hit',
-          action: 'insertCell',
+          kind: 'cellArea',
           bandIdx,
           rowIdx: ri,
-          atIdx: ci,
-          x_mm: beforeLeftX,
+          cellIdx: ci,
+          x_mm: cellLeft,
           y_mm: rowTop,
-          w_mm: beforeRightX - beforeLeftX,
-          h_mm: rowH
-        });
-
-        // "+ Cell after" at atIdx = ci+1
-        const afterExtend = ci === lastCellIdx;
-        const afterLeftX  = cellRight - HIT_ZONE_MM / 2;
-        const afterRightX = afterExtend ? g.W : cellRight + HIT_ZONE_MM / 2;
-        out.push({
-          kind: 'hit',
-          action: 'insertCell',
-          bandIdx,
-          rowIdx: ri,
-          atIdx: ci + 1,
-          x_mm: afterLeftX,
-          y_mm: rowTop,
-          w_mm: afterRightX - afterLeftX,
-          h_mm: rowH
+          w_mm: cellW,
+          h_mm: rowH,
+          selected: isSelected
         });
       }
     }

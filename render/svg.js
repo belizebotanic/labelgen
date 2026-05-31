@@ -21,12 +21,13 @@ export function renderLabel(template, row) {
 }
 
 /**
- * Editor-mode render: same content as renderLabel, plus invisible-until-hover
- * hit-zone overlays for direct manipulation (+ row / + cell).
+ * Editor-mode render: same content as renderLabel, plus an overlay for each
+ * cell (always-visible faint dashed border) that doubles as a click-to-select
+ * target. The cell matching `selection` is rendered with the selected style.
  */
-export function renderLabelEditor(template, row) {
+export function renderLabelEditor(template, row, selection = null) {
   const svg = renderLabel(template, row);
-  for (const shape of layoutEditorOverlays(template)) {
+  for (const shape of layoutEditorOverlays(template, selection)) {
     svg.appendChild(shapeToNode(shape));
   }
   return svg;
@@ -71,7 +72,7 @@ export function renderSheetToString(template, rows) {
 function shapeToNode(s) {
   if (s.kind === 'rect') return rectNode(s);
   if (s.kind === 'text') return textNode(s);
-  if (s.kind === 'hit')  return hitNode(s);
+  if (s.kind === 'cellArea') return cellAreaNode(s);
   return document.createDocumentFragment();
 }
 
@@ -114,20 +115,19 @@ function textNode(s) {
 }
 
 /**
- * Editor hit zone: an invisible rect that becomes a visible "+ row" / "+ cell"
- * affordance on hover. Styled by CSS in <label-preview>'s shadow root via the
- * `.lg-hit` / `.lg-hit-row` / `.lg-hit-cell` classes.
+ * Cell area overlay: faint dashed rectangle around each cell, doubling as a
+ * click-to-select target. Styled by CSS in <label-preview>'s shadow root via
+ * the `.lg-cell-area` class (plus `.selected` when chosen).
  */
-function hitNode(s) {
+function cellAreaNode(s) {
   const r = document.createElementNS(SVG_NS, 'rect');
   r.setAttribute('x', s.x_mm);
   r.setAttribute('y', s.y_mm);
   r.setAttribute('width', s.w_mm);
   r.setAttribute('height', s.h_mm);
-  r.setAttribute('class', `lg-hit lg-hit-${s.action === 'insertRow' ? 'row' : 'cell'}`);
-  r.setAttribute('data-action', s.action);
+  r.setAttribute('class', `lg-cell-area${s.selected ? ' selected' : ''}`);
   r.setAttribute('data-band', s.bandIdx);
-  r.setAttribute('data-at-idx', s.atIdx);
-  if (s.rowIdx != null) r.setAttribute('data-row', s.rowIdx);
+  r.setAttribute('data-row',  s.rowIdx);
+  r.setAttribute('data-cell', s.cellIdx);
   return r;
 }
