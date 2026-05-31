@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Browser-based visual SVG label-sheet editor",
+  "license": "MIT",
   "scripts": {
     "dev": "web-dev-server --config web-dev-server.config.mjs",
     "test": "web-dev-server --config web-dev-server.config.mjs --open /tests/"
