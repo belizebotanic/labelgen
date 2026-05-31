@@ -309,20 +309,16 @@ class CsvImporter extends LitElement {
   }
 
   _addColumn() {
-    const name = prompt('Column name:');
-    if (name == null) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
     const cols = this._effectiveColumns();
-    if (cols.includes(trimmed)) { alert('Column already exists.'); return; }
-    const newCols = [...cols, trimmed];
-    const rows = (this.state.csvRows ?? []).map(r => ({ ...r, [trimmed]: '' }));
-    this._columns = newCols;
-    if (rows.length === 0) {
-      // Make the column visible by ensuring at least an empty seed row.
-      // Don't auto-add a row if user hasn't asked — leave rows empty;
-      // header will still render via _effectiveColumns().
+    let n = cols.length + 1;
+    let name = `col${n}`;
+    while (cols.includes(name)) {
+      n++;
+      name = `col${n}`;
     }
+    const newCols = [...cols, name];
+    const rows = (this.state.csvRows ?? []).map(r => ({ ...r, [name]: '' }));
+    this._columns = newCols;
     store.actions.setCsvRows(rows, this.state.dataUrl ?? null);
   }
 
