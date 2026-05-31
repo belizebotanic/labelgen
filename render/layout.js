@@ -5,25 +5,38 @@ const BAND_POSITIONS = { top: 0, middle: 1, bottom: 2 };
 /**
  * Geometry helpers — used by both the content layout and the editor overlays so
  * both stay aligned to the same coordinate system.
+ *
+ * Bands divide the content area evenly among bands that ACTUALLY EXIST in the
+ * template — not into fixed thirds. So one band fills the whole label, two
+ * bands each get half, three each get a third. They are still ordered
+ * canonically (top → middle → bottom) so the band-position semantics survive.
  */
 function labelGeometry(template) {
   const { label } = template;
   const W = label.width_mm;
   const H = label.height_mm;
   const pad = label.padding_mm;
+  const bandCount = Math.max(1, template.content.bands.length);
   return {
     W, H, pad,
     contentX: pad,
     contentY: pad,
     contentW: W - 2 * pad,
     contentH: H - 2 * pad,
-    bandH: (H - 2 * pad) / 3
+    bandH: (H - 2 * pad) / bandCount
   };
+}
+
+function bandSortedIndex(template, band) {
+  const sorted = [...template.content.bands].sort(
+    (a, b) => (BAND_POSITIONS[a.name] ?? 0) - (BAND_POSITIONS[b.name] ?? 0)
+  );
+  return sorted.findIndex(b => b.name === band.name);
 }
 
 function bandTopY(template, band) {
   const g = labelGeometry(template);
-  return g.contentY + g.bandH * (BAND_POSITIONS[band.name] ?? 0);
+  return g.contentY + g.bandH * bandSortedIndex(template, band);
 }
 
 /**
