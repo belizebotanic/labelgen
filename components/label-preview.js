@@ -12,6 +12,7 @@ class LabelPreview extends LitElement {
       gap: var(--space-2);
       margin-bottom: var(--space-3);
       align-items: center;
+      flex-wrap: wrap;
     }
     .toolbar button {
       padding: var(--space-1) var(--space-2);
@@ -19,10 +20,30 @@ class LabelPreview extends LitElement {
       border-radius: var(--radius-sm);
       background: var(--color-bg);
       cursor: pointer;
+      font: inherit;
     }
     .toolbar button[aria-pressed="true"] {
       background: var(--color-accent-soft);
       border-color: var(--color-accent);
+    }
+    .breadcrumb {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+      margin-left: var(--space-3);
+      padding: var(--space-1) var(--space-2);
+      background: var(--color-bg);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .breadcrumb.selected {
+      color: var(--color-text);
+      background: var(--color-accent-soft);
+      border-color: var(--color-accent);
+    }
+    .row-info {
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+      margin-left: auto;
     }
     .surface {
       display: flex;
@@ -56,8 +77,19 @@ class LabelPreview extends LitElement {
     store.actions.setSelection(null);
   }
 
+  _breadcrumbText() {
+    const sel = this.state.selection;
+    if (!sel) return 'Click a label element to select';
+    const t = this.state.template;
+    const bandName = (b) => t.content.bands[b]?.name ?? '?';
+    if (sel.kind === 'band') return `${bandName(sel.path[0])} band`;
+    if (sel.kind === 'row')  return `${bandName(sel.path[0])} band · row ${sel.path[1] + 1}`;
+    if (sel.kind === 'cell') return `${bandName(sel.path[0])} band · row ${sel.path[1] + 1} · cell ${sel.path[2] + 1}`;
+    return '';
+  }
+
   render() {
-    const { template, csvRows, activeRowIdx, viewMode } = this.state;
+    const { template, csvRows, activeRowIdx, viewMode, selection } = this.state;
     const row = (csvRows && activeRowIdx != null) ? csvRows[activeRowIdx] : null;
     let svgEl;
     if (viewMode === 'grid') {
@@ -70,7 +102,8 @@ class LabelPreview extends LitElement {
       <div class="toolbar">
         <button aria-pressed=${viewMode === 'single'} @click=${() => this._setMode('single')}>Single label</button>
         <button aria-pressed=${viewMode === 'grid'}   @click=${() => this._setMode('grid')}>Grid</button>
-        <span style="color: var(--color-text-muted); font-size: var(--font-size-sm); margin-left: var(--space-3);">
+        <span class="breadcrumb ${selection ? 'selected' : ''}">${this._breadcrumbText()}</span>
+        <span class="row-info">
           ${csvRows ? `Row ${activeRowIdx + 1} of ${csvRows.length}` : 'No data loaded'}
         </span>
       </div>

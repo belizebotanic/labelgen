@@ -3,7 +3,6 @@ import { store, hydrate } from './store.js';
 import { secureFetch } from './model/share-url.js';
 import Papa from 'papaparse';
 
-import './components/structure-tree.js';
 import './components/label-preview.js';
 import './components/sheet-panel.js';
 import './components/label-panel.js';
@@ -47,17 +46,16 @@ class LabelgenApp extends LitElement {
     :host {
       display: grid;
       grid-template-areas:
-        "structure preview properties"
-        "csv       csv     csv"
-        "export    export  export";
-      grid-template-columns: 260px 1fr 320px;
+        "preview properties"
+        "csv     csv"
+        "export  export";
+      grid-template-columns: 1fr 320px;
       grid-template-rows: 1fr auto auto;
       gap: var(--space-3);
       padding: var(--space-3);
       height: 100%;
       box-sizing: border-box;
     }
-    .structure  { grid-area: structure;  overflow: auto; min-width: 0; }
     .preview    { grid-area: preview;    overflow: auto; min-width: 0;
                   background: var(--color-surface);
                   border: var(--border); border-radius: var(--radius-md);
@@ -70,9 +68,6 @@ class LabelgenApp extends LitElement {
 
   render() {
     return html`
-      <div class="structure">
-        <structure-tree .state=${this.state}></structure-tree>
-      </div>
       <div class="preview">
         <label-preview .state=${this.state}></label-preview>
       </div>
