@@ -4,7 +4,7 @@ Browser-based visual editor for SVG label sheets. Design a label, optionally
 load CSV data to preview real values, and export single labels or full sheets.
 No backend, no production build.
 
-**Live app:** <https://brettatoms.github.io/labelgen/>
+**Live app:** <https://belizebotanic.github.io/labelgen/>
 
 ## What you can do
 
