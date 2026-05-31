@@ -17,7 +17,7 @@ class FieldsPanel extends LitElement {
       padding: var(--space-2) var(--space-3);
       cursor: pointer;
       list-style: none;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; gap: var(--space-2);
       user-select: none;
     }
     summary::-webkit-details-marker { display: none; }
@@ -34,7 +34,7 @@ class FieldsPanel extends LitElement {
 
   render() {
     const fields = listInTemplate(this.state.template);
-    const summary = html`<summary><h3>Fields</h3><span class="chev">${iconChevronDown}</span></summary>`;
+    const summary = html`<summary><span class="chev">${iconChevronDown}</span><h3>Fields</h3></summary>`;
     if (fields.length === 0) {
       return html`
         <details open>

@@ -17,7 +17,7 @@ class CellProperties extends LitElement {
       padding: var(--space-2) var(--space-3);
       cursor: pointer;
       list-style: none;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; gap: var(--space-2);
       user-select: none;
     }
     summary::-webkit-details-marker { display: none; }
@@ -108,7 +108,7 @@ class CellProperties extends LitElement {
 
   render() {
     const cell = this._cell;
-    const summary = html`<summary><h3>Cell properties</h3><span class="chev">${iconChevronDown}</span></summary>`;
+    const summary = html`<summary><span class="chev">${iconChevronDown}</span><h3>Cell properties</h3></summary>`;
     if (!cell) {
       return html`
         <details open>

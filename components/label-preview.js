@@ -107,21 +107,33 @@ class LabelPreview extends LitElement {
     }
 
     /* ---- Main canvas: label with + buttons around it ---- */
+    /* Outer .canvas fills the preview region and centers the inner frame.
+       Inner .label-frame is sized to its content (label + buttons) so the
+       buttons sit tight against the label, separated by a fixed gap, not
+       pushed out to the preview-region edges. */
     .canvas {
       flex: 1;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      grid-template-rows: auto 1fr auto;
-      gap: var(--space-2);
-      justify-items: center;
+      display: flex;
+      justify-content: center;
       align-items: center;
       min-height: 0;
     }
-    .canvas .top    { grid-column: 2; grid-row: 1; }
-    .canvas .bottom { grid-column: 2; grid-row: 3; }
-    .canvas .left   { grid-column: 1; grid-row: 2; }
-    .canvas .right  { grid-column: 3; grid-row: 2; }
-    .canvas .center { grid-column: 2; grid-row: 2; min-height: 0; }
+    .label-frame {
+      display: grid;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto auto auto;
+      gap: var(--space-3);
+      align-items: center;
+      justify-items: center;
+      max-width: 100%;
+      max-height: 100%;
+      min-height: 0;
+    }
+    .label-frame .top    { grid-column: 2; grid-row: 1; }
+    .label-frame .bottom { grid-column: 2; grid-row: 3; }
+    .label-frame .left   { grid-column: 1; grid-row: 2; }
+    .label-frame .right  { grid-column: 3; grid-row: 2; }
+    .label-frame .center { grid-column: 2; grid-row: 2; min-height: 0; }
 
     .add-btn {
       width: 32px; height: 32px;
@@ -368,15 +380,17 @@ class LabelPreview extends LitElement {
 
       ${viewMode === 'single' ? html`
         <div class="canvas">
-          <button class="add-btn top"    title="Insert row above selected cell"
-                  ?disabled=${!cellSelected} @click=${this._insertRowAbove}>+</button>
-          <button class="add-btn left"   title="Insert cell before selected cell"
-                  ?disabled=${!cellSelected} @click=${this._insertCellBefore}>+</button>
-          <div class="surface center" @click=${this._onCanvasClick}>${svgEl}</div>
-          <button class="add-btn right"  title="Insert cell after selected cell"
-                  ?disabled=${!cellSelected} @click=${this._insertCellAfter}>+</button>
-          <button class="add-btn bottom" title="Insert row below selected cell"
-                  ?disabled=${!cellSelected} @click=${this._insertRowBelow}>+</button>
+          <div class="label-frame">
+            <button class="add-btn top"    title="Insert row above selected cell"
+                    ?disabled=${!cellSelected} @click=${this._insertRowAbove}>+</button>
+            <button class="add-btn left"   title="Insert cell before selected cell"
+                    ?disabled=${!cellSelected} @click=${this._insertCellBefore}>+</button>
+            <div class="surface center" @click=${this._onCanvasClick}>${svgEl}</div>
+            <button class="add-btn right"  title="Insert cell after selected cell"
+                    ?disabled=${!cellSelected} @click=${this._insertCellAfter}>+</button>
+            <button class="add-btn bottom" title="Insert row below selected cell"
+                    ?disabled=${!cellSelected} @click=${this._insertRowBelow}>+</button>
+          </div>
         </div>
       ` : html`
         <div class="surface" @click=${this._onCanvasClick}>${svgEl}</div>

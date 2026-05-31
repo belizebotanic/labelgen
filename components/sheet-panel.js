@@ -80,6 +80,7 @@ class SheetPanel extends LitElement {
     return html`
       <details open>
         <summary>
+          <span class="chev">${iconChevronDown}</span>
           <h3>Sheet</h3>
           <select
             title="Display unit for length fields in this card"
@@ -89,7 +90,6 @@ class SheetPanel extends LitElement {
             <option value="mm">mm</option>
             <option value="in">in</option>
           </select>
-          <span class="chev">${iconChevronDown}</span>
         </summary>
         <div class="body">
           <div class="row"><label>Width (${u})</label> <input type="number" step=${step} min="0.1" .value=${v(s.width_mm)}  @change=${this._onLength('width_mm')}></div>
