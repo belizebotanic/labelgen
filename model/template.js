@@ -4,16 +4,20 @@ export const MAX_DIM_MM = 10000;
 export const MIN_FONT_PT = 1;
 export const MAX_FONT_PT = 1000;
 export const MAX_TEXT_LEN = 4096;
-export const MAX_BANDS = 10;
-export const MAX_ROWS_PER_BAND = 50;
+export const MAX_ROWS = 50;
 export const MAX_CELLS_PER_ROW = 20;
 export const VALID_ALIGNS = ['left', 'center', 'right'];
-export const VALID_BANDS = ['top', 'middle', 'bottom'];
 export const VALID_LAYERS = ['engrave', 'cut'];
 
+export const VERSION = 2;
+
+/**
+ * Default template for a new label: 3 rows, first and last with 2 cells,
+ * middle with 1 cell. All cells start empty.
+ */
 export function create() {
   return {
-    version: 1,
+    version: VERSION,
     sheet: {
       width_mm: 210, height_mm: 297,
       margin_mm: 10, gutter_mm: 2,
@@ -29,64 +33,69 @@ export function create() {
       layer: 'engrave'
     },
     content: {
-      bands: [{ name: 'middle', rows: [{ cells: [defaultCell('Hello')] }] }]
+      rows: [
+        { cells: [defaultCell(), defaultCell()] },
+        { cells: [defaultCell()] },
+        { cells: [defaultCell(), defaultCell()] }
+      ]
     }
   };
+}
+
+function defaultCell(text = '') {
+  return { text, align: 'center', italic: false, bold: false };
 }
 
 function defaultRow() {
   return { cells: [defaultCell()] };
 }
-function defaultCell(text = '') {
-  return { text, align: 'center', italic: false, bold: false };
-}
 
-// All ops return a new template; we use structuredClone to avoid shared refs.
+// All ops return a new template; structuredClone keeps refs disjoint.
 function clone(t) { return structuredClone(t); }
 
-export function addRow(t, bandIdx) {
-  return insertRowAt(t, bandIdx, t.content.bands[bandIdx].rows.length);
+export function addRow(t) {
+  return insertRowAt(t, t.content.rows.length);
 }
 
-export function insertRowAt(t, bandIdx, atIdx) {
+export function insertRowAt(t, atIdx) {
   const out = clone(t);
-  const rows = out.content.bands[bandIdx].rows;
+  const rows = out.content.rows;
   const clamped = Math.max(0, Math.min(atIdx, rows.length));
   rows.splice(clamped, 0, defaultRow());
   return out;
 }
 
-export function removeRow(t, bandIdx, rowIdx) {
+export function removeRow(t, rowIdx) {
   const out = clone(t);
-  const rows = out.content.bands[bandIdx].rows;
-  if (rows.length <= 1) return out; // never drop to zero
+  const rows = out.content.rows;
+  if (rows.length <= 1) return out;
   rows.splice(rowIdx, 1);
   return out;
 }
 
-export function addCell(t, bandIdx, rowIdx) {
-  return insertCellAt(t, bandIdx, rowIdx, t.content.bands[bandIdx].rows[rowIdx].cells.length);
+export function addCell(t, rowIdx) {
+  return insertCellAt(t, rowIdx, t.content.rows[rowIdx].cells.length);
 }
 
-export function insertCellAt(t, bandIdx, rowIdx, atIdx) {
+export function insertCellAt(t, rowIdx, atIdx) {
   const out = clone(t);
-  const cells = out.content.bands[bandIdx].rows[rowIdx].cells;
+  const cells = out.content.rows[rowIdx].cells;
   const clamped = Math.max(0, Math.min(atIdx, cells.length));
   cells.splice(clamped, 0, defaultCell());
   return out;
 }
 
-export function removeCell(t, bandIdx, rowIdx, cellIdx) {
+export function removeCell(t, rowIdx, cellIdx) {
   const out = clone(t);
-  const cells = out.content.bands[bandIdx].rows[rowIdx].cells;
+  const cells = out.content.rows[rowIdx].cells;
   if (cells.length <= 1) return out;
   cells.splice(cellIdx, 1);
   return out;
 }
 
-export function setCell(t, bandIdx, rowIdx, cellIdx, patch) {
+export function setCell(t, rowIdx, cellIdx, patch) {
   const out = clone(t);
-  Object.assign(out.content.bands[bandIdx].rows[rowIdx].cells[cellIdx], patch);
+  Object.assign(out.content.rows[rowIdx].cells[cellIdx], patch);
   return out;
 }
 
@@ -98,7 +107,6 @@ export function setSheet(t, patch) {
 
 export function setLabel(t, patch) {
   const out = clone(t);
-  // shallow-merge nested font / border too if provided
   if (patch.font) Object.assign(out.label.font, patch.font);
   if (patch.border) Object.assign(out.label.border, patch.border);
   const { font, border, ...rest } = patch;
@@ -132,9 +140,8 @@ function reqBool(obj, key) {
 
 export function validate(t) {
   if (t == null || typeof t !== 'object') err('not an object');
-  if (t.version !== 1) err('version must be 1');
+  if (t.version !== VERSION) err(`version must be ${VERSION}`);
 
-  // sheet
   if (!t.sheet || typeof t.sheet !== 'object') err('sheet missing');
   reqNum(t.sheet, 'width_mm', MIN_DIM_MM, MAX_DIM_MM);
   reqNum(t.sheet, 'height_mm', MIN_DIM_MM, MAX_DIM_MM);
@@ -143,7 +150,6 @@ export function validate(t) {
   reqNum(t.sheet, 'rows', 1, 200);
   reqNum(t.sheet, 'cols', 1, 200);
 
-  // label
   if (!t.label || typeof t.label !== 'object') err('label missing');
   reqNum(t.label, 'width_mm', MIN_DIM_MM, MAX_DIM_MM);
   reqNum(t.label, 'height_mm', MIN_DIM_MM, MAX_DIM_MM);
@@ -158,31 +164,23 @@ export function validate(t) {
   if (t.label.hang_holes.length > 8) err('too many hang_holes');
   reqEnum(t.label, 'layer', VALID_LAYERS);
 
-  // content
   if (!t.content || typeof t.content !== 'object') err('content missing');
-  if (!Array.isArray(t.content.bands)) err('content.bands must be array');
-  if (t.content.bands.length === 0) err('content.bands must have at least one band');
-  if (t.content.bands.length > MAX_BANDS) err(`too many bands (max ${MAX_BANDS})`);
+  if (!Array.isArray(t.content.rows)) err('content.rows must be array');
+  if (t.content.rows.length === 0) err('content.rows must have at least one row');
+  if (t.content.rows.length > MAX_ROWS) err(`too many rows (max ${MAX_ROWS})`);
 
-  for (const [bi, band] of t.content.bands.entries()) {
-    if (!band || typeof band !== 'object') err(`band ${bi} not object`);
-    reqEnum(band, 'name', VALID_BANDS);
-    if (!Array.isArray(band.rows)) err(`band ${bi}.rows must be array`);
-    if (band.rows.length === 0) err(`band ${bi} must have at least one row`);
-    if (band.rows.length > MAX_ROWS_PER_BAND) err(`band ${bi}: too many rows`);
-    for (const [ri, row] of band.rows.entries()) {
-      if (!row || typeof row !== 'object') err(`band ${bi} row ${ri} not object`);
-      if (!Array.isArray(row.cells)) err(`band ${bi} row ${ri}.cells must be array`);
-      if (row.cells.length === 0) err(`band ${bi} row ${ri} must have at least one cell`);
-      if (row.cells.length > MAX_CELLS_PER_ROW) err(`band ${bi} row ${ri}: too many cells`);
-      for (const [ci, cell] of row.cells.entries()) {
-        if (!cell || typeof cell !== 'object') err(`band ${bi} row ${ri} cell ${ci} not object`);
-        reqStr(cell, 'text', MAX_TEXT_LEN);
-        reqEnum(cell, 'align', VALID_ALIGNS);
-        reqBool(cell, 'italic');
-        reqBool(cell, 'bold');
-        if ('font_size_pt' in cell) reqNum(cell, 'font_size_pt', MIN_FONT_PT, MAX_FONT_PT);
-      }
+  for (const [ri, row] of t.content.rows.entries()) {
+    if (!row || typeof row !== 'object') err(`row ${ri} not object`);
+    if (!Array.isArray(row.cells)) err(`row ${ri}.cells must be array`);
+    if (row.cells.length === 0) err(`row ${ri} must have at least one cell`);
+    if (row.cells.length > MAX_CELLS_PER_ROW) err(`row ${ri}: too many cells`);
+    for (const [ci, cell] of row.cells.entries()) {
+      if (!cell || typeof cell !== 'object') err(`row ${ri} cell ${ci} not object`);
+      reqStr(cell, 'text', MAX_TEXT_LEN);
+      reqEnum(cell, 'align', VALID_ALIGNS);
+      reqBool(cell, 'italic');
+      reqBool(cell, 'bold');
+      if ('font_size_pt' in cell) reqNum(cell, 'font_size_pt', MIN_FONT_PT, MAX_FONT_PT);
     }
   }
   return t;

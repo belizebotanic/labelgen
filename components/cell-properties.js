@@ -43,47 +43,44 @@ class CellProperties extends LitElement {
   get _selectedPath() {
     const sel = this.state.selection;
     if (!sel || sel.kind !== 'cell') return null;
-    return sel.path; // [bandIdx, rowIdx, cellIdx]
+    return sel.path; // [rowIdx, cellIdx]
   }
   get _cell() {
     const p = this._selectedPath;
     if (!p) return null;
-    const [b, r, c] = p;
-    return this.state.template.content.bands[b]?.rows[r]?.cells[c] ?? null;
+    const [r, c] = p;
+    return this.state.template.content.rows[r]?.cells[c] ?? null;
   }
 
   _patch(patch) {
-    const [b, r, c] = this._selectedPath;
-    store.actions.setCell(b, r, c, patch);
+    const [r, c] = this._selectedPath;
+    store.actions.setCell(r, c, patch);
   }
 
   _removeCell() {
     const p = this._selectedPath; if (!p) return;
-    const [b, r, c] = p;
+    const [r, c] = p;
     const t = this.state.template;
-    const cellCount = t.content.bands[b]?.rows[r]?.cells.length ?? 0;
+    const cellCount = t.content.rows[r]?.cells.length ?? 0;
     if (cellCount <= 1) return;
-    store.actions.removeCell(b, r, c);
-    // Re-target the selection to the cell that now occupies this index
-    // (or the last cell, if we removed the rightmost one).
+    store.actions.removeCell(r, c);
     const newCount = cellCount - 1;
     const newC = Math.min(c, newCount - 1);
-    store.actions.setSelection({ kind: 'cell', path: [b, r, newC] });
+    store.actions.setSelection({ kind: 'cell', path: [r, newC] });
   }
 
   _removeRow() {
     const p = this._selectedPath; if (!p) return;
-    const [b, r, c] = p;
+    const [r, c] = p;
     const t = this.state.template;
-    const rowCount = t.content.bands[b]?.rows.length ?? 0;
+    const rowCount = t.content.rows.length;
     if (rowCount <= 1) return;
-    store.actions.removeRow(b, r);
+    store.actions.removeRow(r);
     const newCount = rowCount - 1;
     const newR = Math.min(r, newCount - 1);
-    // Cell index might exceed the new row's cell count too; clamp.
-    const newRowCells = this.state.template.content.bands[b]?.rows[newR]?.cells.length ?? 1;
+    const newRowCells = this.state.template.content.rows[newR]?.cells.length ?? 1;
     const newC = Math.min(c, newRowCells - 1);
-    store.actions.setSelection({ kind: 'cell', path: [b, newR, newC] });
+    store.actions.setSelection({ kind: 'cell', path: [newR, newC] });
   }
 
   render() {
@@ -91,10 +88,10 @@ class CellProperties extends LitElement {
     if (!cell) {
       return html`<div class="panel"><h3>Cell properties</h3><div class="empty">Click a cell in the preview to edit.</div></div>`;
     }
-    const [b, r] = this._selectedPath;
+    const [r] = this._selectedPath;
     const t = this.state.template;
-    const cellCount = t.content.bands[b]?.rows[r]?.cells.length ?? 0;
-    const rowCount  = t.content.bands[b]?.rows.length ?? 0;
+    const cellCount = t.content.rows[r]?.cells.length ?? 0;
+    const rowCount  = t.content.rows.length;
     const canRemoveCell = cellCount > 1;
     const canRemoveRow  = rowCount  > 1;
     return html`

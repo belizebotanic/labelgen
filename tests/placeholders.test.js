@@ -52,14 +52,14 @@ describe('placeholders.substitute', () => {
 describe('placeholders.listInTemplate', () => {
   test('collects unique placeholders across all cells', () => {
     const t = {
-      content: { bands: [
-        { name: 'top',    rows: [{ cells: [{ text: '{{a}}' }, { text: '{{b}}' }] }] },
-        { name: 'middle', rows: [{ cells: [{ text: '{{a}} and {{c}}' }] }] }
+      content: { rows: [
+        { cells: [{ text: '{{a}}' }, { text: '{{b}}' }] },
+        { cells: [{ text: '{{a}} and {{c}}' }] }
       ]}
     };
     assertEq(listInTemplate(t), ['a', 'b', 'c']);
   });
-  test('returns [] for template with no bands', () => {
-    assertEq(listInTemplate({ content: { bands: [] } }), []);
+  test('returns [] for template with no rows', () => {
+    assertEq(listInTemplate({ content: { rows: [] } }), []);
   });
 });

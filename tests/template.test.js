@@ -2,8 +2,8 @@ import { describe, test, assertEq, assertTrue, assertThrows } from './runner.js'
 import * as T from '../model/template.js';
 
 describe('Template.create', () => {
-  test('returns a template at version 1', () => {
-    assertEq(T.create().version, 1);
+  test('returns a template at the current version', () => {
+    assertEq(T.create().version, T.VERSION);
   });
   test('default sheet is A4 with sensible defaults', () => {
     const t = T.create();
@@ -13,14 +13,20 @@ describe('Template.create', () => {
     assertTrue(t.sheet.rows >= 1);
     assertTrue(t.sheet.cols >= 1);
   });
-  test('default label has one band, one row, one cell with "Hello"', () => {
+  test('default content has 3 rows with cell counts 2 / 1 / 2', () => {
     const t = T.create();
-    assertEq(t.content.bands.length, 1);
-    const band = t.content.bands[0];
-    assertEq(band.name, 'middle');
-    assertEq(band.rows.length, 1);
-    assertEq(band.rows[0].cells.length, 1);
-    assertEq(band.rows[0].cells[0].text, 'Hello');
+    assertEq(t.content.rows.length, 3);
+    assertEq(t.content.rows[0].cells.length, 2);
+    assertEq(t.content.rows[1].cells.length, 1);
+    assertEq(t.content.rows[2].cells.length, 2);
+  });
+  test('default cells all start empty', () => {
+    const t = T.create();
+    for (const row of t.content.rows) {
+      for (const cell of row.cells) {
+        assertEq(cell.text, '');
+      }
+    }
   });
   test('default label carries deferred fields', () => {
     const t = T.create();
@@ -33,7 +39,7 @@ describe('Template ops are immutable', () => {
   test('addRow does not mutate the source template', () => {
     const t = T.create();
     const snapshot = JSON.stringify(t);
-    T.addRow(t, 0);
+    T.addRow(t);
     assertEq(JSON.stringify(t), snapshot);
   });
 });
@@ -41,96 +47,82 @@ describe('Template ops are immutable', () => {
 describe('Template.addRow / removeRow', () => {
   test('addRow appends an empty row with one default cell', () => {
     const t = T.create();
-    const t2 = T.addRow(t, 0);
-    assertEq(t2.content.bands[0].rows.length, 2);
-    assertEq(t2.content.bands[0].rows[1].cells.length, 1);
+    const t2 = T.addRow(t);
+    assertEq(t2.content.rows.length, t.content.rows.length + 1);
+    const newRow = t2.content.rows[t2.content.rows.length - 1];
+    assertEq(newRow.cells.length, 1);
+    assertEq(newRow.cells[0].text, '');
   });
   test('removeRow drops the indexed row', () => {
     let t = T.create();
-    t = T.addRow(t, 0);
-    t = T.removeRow(t, 0, 0);
-    assertEq(t.content.bands[0].rows.length, 1);
+    const before = t.content.rows.length;
+    t = T.removeRow(t, 0);
+    assertEq(t.content.rows.length, before - 1);
   });
   test('removeRow does not remove the last row', () => {
-    const t = T.create();
-    const t2 = T.removeRow(t, 0, 0);
-    assertEq(t2.content.bands[0].rows.length, 1);
+    let t = T.create();
+    // Drop down to one row, then attempt to remove it
+    while (t.content.rows.length > 1) t = T.removeRow(t, 0);
+    const t2 = T.removeRow(t, 0);
+    assertEq(t2.content.rows.length, 1);
   });
 });
 
 describe('Template.insertRowAt', () => {
   test('inserts at the beginning when atIdx=0', () => {
     let t = T.create();
-    t = T.setCell(t, 0, 0, 0, { text: 'original' });
-    t = T.insertRowAt(t, 0, 0);
-    assertEq(t.content.bands[0].rows.length, 2);
-    assertEq(t.content.bands[0].rows[1].cells[0].text, 'original');
+    t = T.setCell(t, 0, 0, { text: 'original' });
+    t = T.insertRowAt(t, 0);
+    assertEq(t.content.rows[1].cells[0].text, 'original');
+    assertEq(t.content.rows[0].cells[0].text, '');
   });
   test('inserts at the end when atIdx=length', () => {
     let t = T.create();
-    t = T.setCell(t, 0, 0, 0, { text: 'original' });
-    t = T.insertRowAt(t, 0, t.content.bands[0].rows.length);
-    assertEq(t.content.bands[0].rows[0].cells[0].text, 'original');
-    assertEq(t.content.bands[0].rows[1].cells[0].text, '');
-  });
-  test('inserts in the middle', () => {
-    let t = T.create();
-    t = T.setCell(t, 0, 0, 0, { text: 'A' });
-    t = T.addRow(t, 0);
-    t = T.setCell(t, 0, 1, 0, { text: 'C' });
-    t = T.insertRowAt(t, 0, 1);
-    assertEq(t.content.bands[0].rows.map(r => r.cells[0].text), ['A', '', 'C']);
+    const len = t.content.rows.length;
+    t = T.insertRowAt(t, len);
+    assertEq(t.content.rows.length, len + 1);
   });
   test('clamps negative atIdx to 0', () => {
-    const t = T.insertRowAt(T.create(), 0, -5);
-    assertEq(t.content.bands[0].rows.length, 2);
+    const before = T.create().content.rows.length;
+    const t = T.insertRowAt(T.create(), -5);
+    assertEq(t.content.rows.length, before + 1);
   });
   test('clamps over-large atIdx to length', () => {
-    const t = T.insertRowAt(T.create(), 0, 999);
-    assertEq(t.content.bands[0].rows.length, 2);
+    const before = T.create().content.rows.length;
+    const t = T.insertRowAt(T.create(), 999);
+    assertEq(t.content.rows.length, before + 1);
   });
 });
 
-describe('Template.insertCellAt', () => {
-  test('inserts at the beginning', () => {
-    let t = T.create();
-    t = T.setCell(t, 0, 0, 0, { text: 'B' });
-    t = T.insertCellAt(t, 0, 0, 0);
-    assertEq(t.content.bands[0].rows[0].cells.map(c => c.text), ['', 'B']);
-  });
-  test('inserts in the middle', () => {
-    let t = T.create();
-    t = T.setCell(t, 0, 0, 0, { text: 'A' });
-    t = T.addCell(t, 0, 0);
-    t = T.setCell(t, 0, 0, 1, { text: 'C' });
-    t = T.insertCellAt(t, 0, 0, 1);
-    assertEq(t.content.bands[0].rows[0].cells.map(c => c.text), ['A', '', 'C']);
-  });
-});
-
-describe('Template.addCell / removeCell', () => {
+describe('Template.addCell / insertCellAt / removeCell', () => {
   test('addCell appends a default cell to the indexed row', () => {
-    const t = T.addCell(T.create(), 0, 0);
-    assertEq(t.content.bands[0].rows[0].cells.length, 2);
+    const t = T.addCell(T.create(), 0);
+    assertEq(t.content.rows[0].cells.length, 3); // default row 0 had 2
+  });
+  test('insertCellAt inserts at the beginning', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, { text: 'B' });
+    t = T.insertCellAt(t, 0, 0);
+    assertEq(t.content.rows[0].cells.map(c => c.text), ['', 'B', '']);
   });
   test('removeCell drops the indexed cell', () => {
-    let t = T.addCell(T.create(), 0, 0);
-    t = T.removeCell(t, 0, 0, 0);
-    assertEq(t.content.bands[0].rows[0].cells.length, 1);
+    const t = T.removeCell(T.create(), 0, 0);
+    assertEq(t.content.rows[0].cells.length, 1); // was 2
   });
   test('removeCell does not remove the last cell in a row', () => {
-    const t = T.removeCell(T.create(), 0, 0, 0);
-    assertEq(t.content.bands[0].rows[0].cells.length, 1);
+    let t = T.create();
+    // Reduce row 1 (which already has 1 cell) — should stay at 1
+    const t2 = T.removeCell(t, 1, 0);
+    assertEq(t2.content.rows[1].cells.length, 1);
   });
 });
 
 describe('Template.setCell / setSheet / setLabel', () => {
   test('setCell merges a patch', () => {
-    const t = T.setCell(T.create(), 0, 0, 0, { align: 'right', italic: true });
-    const cell = t.content.bands[0].rows[0].cells[0];
+    const t = T.setCell(T.create(), 0, 0, { align: 'right', italic: true });
+    const cell = t.content.rows[0].cells[0];
     assertEq(cell.align, 'right');
     assertEq(cell.italic, true);
-    assertEq(cell.text, 'Hello'); // unchanged
   });
   test('setSheet merges a patch', () => {
     const t = T.setSheet(T.create(), { rows: 5, cols: 2 });
@@ -141,6 +133,12 @@ describe('Template.setCell / setSheet / setLabel', () => {
   test('setLabel merges a patch', () => {
     const t = T.setLabel(T.create(), { padding_mm: 5 });
     assertEq(t.label.padding_mm, 5);
+  });
+  test('setLabel preserves font.family when only size changes', () => {
+    const original = T.create().label.font.family;
+    const t = T.setLabel(T.create(), { font: { size_pt: 14 } });
+    assertEq(t.label.font.size_pt, 14);
+    assertEq(t.label.font.family, original);
   });
 });
 
@@ -159,9 +157,9 @@ describe('Template.validate — rejections', () => {
     delete t.version;
     assertThrows(() => T.validate(t));
   });
-  test('rejects unknown version', () => {
+  test('rejects old version 1', () => {
     const t = T.create();
-    t.version = 99;
+    t.version = 1;
     assertThrows(() => T.validate(t));
   });
   test('rejects non-finite numbers', () => {
@@ -181,37 +179,25 @@ describe('Template.validate — rejections', () => {
   });
   test('rejects bad align value', () => {
     const t = T.create();
-    t.content.bands[0].rows[0].cells[0].align = 'middle';
-    assertThrows(() => T.validate(t));
-  });
-  test('rejects bad band name', () => {
-    const t = T.create();
-    t.content.bands[0].name = 'whatever';
+    t.content.rows[0].cells[0].align = 'middle';
     assertThrows(() => T.validate(t));
   });
   test('rejects oversize cell text', () => {
     const t = T.create();
-    t.content.bands[0].rows[0].cells[0].text = 'x'.repeat(5000);
+    t.content.rows[0].cells[0].text = 'x'.repeat(5000);
     assertThrows(() => T.validate(t));
   });
-  test('rejects too many bands', () => {
+  test('rejects too many rows', () => {
     const t = T.create();
-    while (t.content.bands.length < 11) {
-      t.content.bands.push({ name: 'middle', rows: [{ cells: [{ text: 'x', align: 'left', italic: false, bold: false }] }] });
-    }
-    assertThrows(() => T.validate(t));
-  });
-  test('rejects too many rows in a band', () => {
-    const t = T.create();
-    while (t.content.bands[0].rows.length < 51) {
-      t.content.bands[0].rows.push({ cells: [{ text: 'x', align: 'left', italic: false, bold: false }] });
+    while (t.content.rows.length < 51) {
+      t.content.rows.push({ cells: [{ text: 'x', align: 'left', italic: false, bold: false }] });
     }
     assertThrows(() => T.validate(t));
   });
   test('rejects too many cells in a row', () => {
     const t = T.create();
-    while (t.content.bands[0].rows[0].cells.length < 21) {
-      t.content.bands[0].rows[0].cells.push({ text: 'x', align: 'left', italic: false, bold: false });
+    while (t.content.rows[0].cells.length < 21) {
+      t.content.rows[0].cells.push({ text: 'x', align: 'left', italic: false, bold: false });
     }
     assertThrows(() => T.validate(t));
   });

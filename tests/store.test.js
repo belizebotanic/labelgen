@@ -5,7 +5,7 @@ import * as T from '../model/template.js';
 describe('store', () => {
   test('getState returns initial state', () => {
     const s = createStore({ template: T.create() });
-    assertEq(s.getState().template.version, 1);
+    assertEq(s.getState().template.version, T.VERSION);
     assertEq(s.getState().csvRows, null);
     assertEq(s.getState().activeRowIdx, null);
     assertEq(s.getState().selection, null);
@@ -20,8 +20,9 @@ describe('store', () => {
   });
   test('action helpers wrap template ops immutably', () => {
     const s = createStore({ template: T.create() });
-    s.actions.addCell(0, 0);
-    assertEq(s.getState().template.content.bands[0].rows[0].cells.length, 2);
+    const before = s.getState().template.content.rows[0].cells.length;
+    s.actions.addCell(0);
+    assertEq(s.getState().template.content.rows[0].cells.length, before + 1);
   });
   test('unsubscribe stops notifications', () => {
     const s = createStore({ template: T.create() });

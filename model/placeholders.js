@@ -30,15 +30,13 @@ export function substitute(text, row) {
 export function listInTemplate(template) {
   const seen = new Set();
   const out = [];
-  const bands = template?.content?.bands ?? [];
-  for (const band of bands) {
-    for (const row of band.rows ?? []) {
-      for (const cell of row.cells ?? []) {
-        for (const name of extract(cell.text ?? '')) {
-          if (!seen.has(name)) {
-            seen.add(name);
-            out.push(name);
-          }
+  const rows = template?.content?.rows ?? [];
+  for (const row of rows) {
+    for (const cell of row.cells ?? []) {
+      for (const name of extract(cell.text ?? '')) {
+        if (!seen.has(name)) {
+          seen.add(name);
+          out.push(name);
         }
       }
     }

@@ -21,7 +21,7 @@ describe('svg.renderLabelToString', () => {
     assertTrue(typeof s === 'string' && s.startsWith('<svg'), s.slice(0, 30));
   });
   test('does not contain <script> or javascript:', () => {
-    const t = T.setCell(T.create(), 0, 0, 0, { text: '<script>alert(1)</script>' });
+    const t = T.setCell(T.create(), 0, 0, { text: '<script>alert(1)</script>' });
     const s = renderLabelToString(t, null);
     assertTrue(!s.toLowerCase().includes('<script'), 'leaked <script tag');
     assertTrue(!s.toLowerCase().includes('javascript:'), 'leaked javascript:');

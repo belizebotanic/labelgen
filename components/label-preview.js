@@ -118,10 +118,10 @@ class LabelPreview extends LitElement {
   _onClick(e) {
     let n = e.target;
     while (n && n !== e.currentTarget) {
-      if (n.dataset && n.dataset.band != null && n.dataset.cell != null) {
+      if (n.dataset && n.dataset.row != null && n.dataset.cell != null) {
         store.actions.setSelection({
           kind: 'cell',
-          path: [Number(n.dataset.band), Number(n.dataset.row), Number(n.dataset.cell)]
+          path: [Number(n.dataset.row), Number(n.dataset.cell)]
         });
         return;
       }
@@ -138,38 +138,33 @@ class LabelPreview extends LitElement {
 
   _insertRowAbove() {
     const p = this._selectedCellPath(); if (!p) return;
-    const [b, r, c] = p;
-    store.actions.insertRowAt(b, r);
-    store.actions.setSelection({ kind: 'cell', path: [b, r + 1, c] });
+    const [r, c] = p;
+    store.actions.insertRowAt(r);
+    store.actions.setSelection({ kind: 'cell', path: [r + 1, c] });
   }
   _insertRowBelow() {
     const p = this._selectedCellPath(); if (!p) return;
-    const [b, r, c] = p;
-    store.actions.insertRowAt(b, r + 1);
-    // Selection's row index unchanged; the new row is below it.
-    store.actions.setSelection({ kind: 'cell', path: [b, r, c] });
+    const [r, c] = p;
+    store.actions.insertRowAt(r + 1);
+    store.actions.setSelection({ kind: 'cell', path: [r, c] });
   }
   _insertCellBefore() {
     const p = this._selectedCellPath(); if (!p) return;
-    const [b, r, c] = p;
-    store.actions.insertCellAt(b, r, c);
-    store.actions.setSelection({ kind: 'cell', path: [b, r, c + 1] });
+    const [r, c] = p;
+    store.actions.insertCellAt(r, c);
+    store.actions.setSelection({ kind: 'cell', path: [r, c + 1] });
   }
   _insertCellAfter() {
     const p = this._selectedCellPath(); if (!p) return;
-    const [b, r, c] = p;
-    store.actions.insertCellAt(b, r, c + 1);
-    store.actions.setSelection({ kind: 'cell', path: [b, r, c] });
+    const [r, c] = p;
+    store.actions.insertCellAt(r, c + 1);
+    store.actions.setSelection({ kind: 'cell', path: [r, c] });
   }
 
   _breadcrumbText() {
     const sel = this.state.selection;
     if (!sel) return 'Click a cell to select';
-    const t = this.state.template;
-    const bandName = (b) => t.content.bands[b]?.name ?? '?';
-    if (sel.kind === 'band') return `${bandName(sel.path[0])} band`;
-    if (sel.kind === 'row')  return `${bandName(sel.path[0])} band · row ${sel.path[1] + 1}`;
-    if (sel.kind === 'cell') return `${bandName(sel.path[0])} band · row ${sel.path[1] + 1} · cell ${sel.path[2] + 1}`;
+    if (sel.kind === 'cell') return `row ${sel.path[0] + 1} · cell ${sel.path[1] + 1}`;
     return '';
   }
 

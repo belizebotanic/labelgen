@@ -103,8 +103,7 @@ function textNode(s) {
   else if (s.align === 'right')  t.setAttribute('text-anchor', 'end');
   else                            t.setAttribute('text-anchor', 'middle');
   t.setAttribute('dominant-baseline', s.baseline === 'middle' ? 'central' : s.baseline);
-  if (s.bandIdx != null) {
-    t.setAttribute('data-band', s.bandIdx);
+  if (s.rowIdx != null) {
     t.setAttribute('data-row',  s.rowIdx);
     t.setAttribute('data-cell', s.cellIdx);
     t.style.cursor = 'pointer';
@@ -126,7 +125,6 @@ function cellAreaNode(s) {
   r.setAttribute('width', s.w_mm);
   r.setAttribute('height', s.h_mm);
   r.setAttribute('class', `lg-cell-area${s.selected ? ' selected' : ''}`);
-  r.setAttribute('data-band', s.bandIdx);
   r.setAttribute('data-row',  s.rowIdx);
   r.setAttribute('data-cell', s.cellIdx);
   return r;

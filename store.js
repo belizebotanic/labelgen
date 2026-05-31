@@ -28,13 +28,13 @@ export function createStore(initial = {}) {
 
   // Template-op helpers that auto-update the store.
   const actions = {
-    addRow(bandIdx)                            { setState({ template: Template.addRow(state.template, bandIdx) }); },
-    insertRowAt(bandIdx, atIdx)                { setState({ template: Template.insertRowAt(state.template, bandIdx, atIdx) }); },
-    removeRow(bandIdx, rowIdx)                 { setState({ template: Template.removeRow(state.template, bandIdx, rowIdx) }); },
-    addCell(bandIdx, rowIdx)                   { setState({ template: Template.addCell(state.template, bandIdx, rowIdx) }); },
-    insertCellAt(bandIdx, rowIdx, atIdx)       { setState({ template: Template.insertCellAt(state.template, bandIdx, rowIdx, atIdx) }); },
-    removeCell(bandIdx, rowIdx, cellIdx)       { setState({ template: Template.removeCell(state.template, bandIdx, rowIdx, cellIdx) }); },
-    setCell(bandIdx, rowIdx, cellIdx, patch)   { setState({ template: Template.setCell(state.template, bandIdx, rowIdx, cellIdx, patch) }); },
+    addRow()                                   { setState({ template: Template.addRow(state.template) }); },
+    insertRowAt(atIdx)                         { setState({ template: Template.insertRowAt(state.template, atIdx) }); },
+    removeRow(rowIdx)                          { setState({ template: Template.removeRow(state.template, rowIdx) }); },
+    addCell(rowIdx)                            { setState({ template: Template.addCell(state.template, rowIdx) }); },
+    insertCellAt(rowIdx, atIdx)                { setState({ template: Template.insertCellAt(state.template, rowIdx, atIdx) }); },
+    removeCell(rowIdx, cellIdx)                { setState({ template: Template.removeCell(state.template, rowIdx, cellIdx) }); },
+    setCell(rowIdx, cellIdx, patch)            { setState({ template: Template.setCell(state.template, rowIdx, cellIdx, patch) }); },
     setSheet(patch)                            { setState({ template: Template.setSheet(state.template, patch) }); },
     setLabel(patch)                            { setState({ template: Template.setLabel(state.template, patch) }); },
     setTemplate(t)                             { setState({ template: t }); },
