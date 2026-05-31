@@ -21,7 +21,7 @@ class CellProperties extends LitElement {
       user-select: none;
     }
     summary::-webkit-details-marker { display: none; }
-    summary h3 { margin: 0; font-size: var(--font-size-base); }
+    summary h3 { margin: 0; font-size: var(--font-size-base); flex: 1; }
     summary .chev { transition: transform 120ms ease-out; color: var(--color-text-muted); display: inline-flex; }
     details:not([open]) summary .chev { transform: rotate(-90deg); }
     .body { padding: 0 var(--space-3) var(--space-3); }
@@ -108,7 +108,7 @@ class CellProperties extends LitElement {
 
   render() {
     const cell = this._cell;
-    const summary = html`<summary><span class="chev">${iconChevronDown}</span><h3>Cell properties</h3></summary>`;
+    const summary = html`<summary><h3>Cell properties</h3><span class="chev">${iconChevronDown}</span></summary>`;
     if (!cell) {
       return html`
         <details open>

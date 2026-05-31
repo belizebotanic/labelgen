@@ -33,16 +33,16 @@ class SheetPanel extends LitElement {
     summary h3 { margin: 0; font-size: var(--font-size-base); flex: 1; }
     summary .chev { transition: transform 120ms ease-out; color: var(--color-text-muted); display: inline-flex; }
     details:not([open]) summary .chev { transform: rotate(-90deg); }
-    summary select {
-      padding: 2px var(--space-1);
+    .body { padding: 0 var(--space-3) var(--space-3); }
+    select {
+      width: 100%;
+      padding: var(--space-1) var(--space-2);
       border: var(--border);
       border-radius: var(--radius-sm);
       background: var(--color-bg);
       font: inherit;
-      font-size: var(--font-size-sm);
       cursor: pointer;
     }
-    .body { padding: 0 var(--space-3) var(--space-3); }
     .row {
       display: grid;
       grid-template-columns: 1fr 90px;
@@ -80,18 +80,20 @@ class SheetPanel extends LitElement {
     return html`
       <details open>
         <summary>
-          <span class="chev">${iconChevronDown}</span>
           <h3>Sheet</h3>
-          <select
-            title="Display unit for length fields in this card"
-            @click=${(e) => e.stopPropagation()}
-            @change=${this._onUnit}
-            .value=${unit}>
-            <option value="mm">mm</option>
-            <option value="in">in</option>
-          </select>
+          <span class="chev">${iconChevronDown}</span>
         </summary>
         <div class="body">
+          <div class="row">
+            <label>Unit</label>
+            <select
+              title="Display unit for length fields in this card"
+              @change=${this._onUnit}
+              .value=${unit}>
+              <option value="mm">mm</option>
+              <option value="in">in</option>
+            </select>
+          </div>
           <div class="row"><label>Width (${u})</label> <input type="number" step=${step} min="0.1" .value=${v(s.width_mm)}  @change=${this._onLength('width_mm')}></div>
           <div class="row"><label>Height (${u})</label><input type="number" step=${step} min="0.1" .value=${v(s.height_mm)} @change=${this._onLength('height_mm')}></div>
           <div class="row"><label>Margin (${u})</label><input type="number" step=${step} min="0"   .value=${v(s.margin_mm)} @change=${this._onLength('margin_mm')}></div>
