@@ -1,17 +1,32 @@
-import { layoutLabel } from './layout.js';
+import { layoutLabel, layoutEditorOverlays } from './layout.js';
 import { ptToMm } from './units.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-export function renderLabel(template, row) {
-  const W = template.label.width_mm;
-  const H = template.label.height_mm;
+function newSvg(viewW, viewH) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('xmlns', SVG_NS);
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.setAttribute('width', `${W}mm`);
-  svg.setAttribute('height', `${H}mm`);
+  svg.setAttribute('viewBox', `0 0 ${viewW} ${viewH}`);
+  svg.setAttribute('width', `${viewW}mm`);
+  svg.setAttribute('height', `${viewH}mm`);
+  return svg;
+}
+
+export function renderLabel(template, row) {
+  const svg = newSvg(template.label.width_mm, template.label.height_mm);
   for (const shape of layoutLabel(template, row)) {
+    svg.appendChild(shapeToNode(shape));
+  }
+  return svg;
+}
+
+/**
+ * Editor-mode render: same content as renderLabel, plus invisible-until-hover
+ * hit-zone overlays for direct manipulation (+ row / + cell).
+ */
+export function renderLabelEditor(template, row) {
+  const svg = renderLabel(template, row);
+  for (const shape of layoutEditorOverlays(template)) {
     svg.appendChild(shapeToNode(shape));
   }
   return svg;
@@ -24,11 +39,7 @@ export function renderLabelToString(template, row) {
 export function renderSheet(template, rows) {
   const SW = template.sheet.width_mm;
   const SH = template.sheet.height_mm;
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('xmlns', SVG_NS);
-  svg.setAttribute('viewBox', `0 0 ${SW} ${SH}`);
-  svg.setAttribute('width', `${SW}mm`);
-  svg.setAttribute('height', `${SH}mm`);
+  const svg = newSvg(SW, SH);
 
   const { margin_mm: M, gutter_mm: G, rows: R, cols: C } = template.sheet;
   const labelW = template.label.width_mm;
@@ -60,7 +71,7 @@ export function renderSheetToString(template, rows) {
 function shapeToNode(s) {
   if (s.kind === 'rect') return rectNode(s);
   if (s.kind === 'text') return textNode(s);
-  // unknown shapes are skipped silently (forward compat)
+  if (s.kind === 'hit')  return hitNode(s);
   return document.createDocumentFragment();
 }
 
@@ -100,4 +111,23 @@ function textNode(s) {
   // SAFETY: textContent escapes user input; never assign innerHTML.
   t.textContent = s.text;
   return t;
+}
+
+/**
+ * Editor hit zone: an invisible rect that becomes a visible "+ row" / "+ cell"
+ * affordance on hover. Styled by CSS in <label-preview>'s shadow root via the
+ * `.lg-hit` / `.lg-hit-row` / `.lg-hit-cell` classes.
+ */
+function hitNode(s) {
+  const r = document.createElementNS(SVG_NS, 'rect');
+  r.setAttribute('x', s.x_mm);
+  r.setAttribute('y', s.y_mm);
+  r.setAttribute('width', s.w_mm);
+  r.setAttribute('height', s.h_mm);
+  r.setAttribute('class', `lg-hit lg-hit-${s.action === 'insertRow' ? 'row' : 'cell'}`);
+  r.setAttribute('data-action', s.action);
+  r.setAttribute('data-band', s.bandIdx);
+  r.setAttribute('data-at-idx', s.atIdx);
+  if (s.rowIdx != null) r.setAttribute('data-row', s.rowIdx);
+  return r;
 }

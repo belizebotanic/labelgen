@@ -29,8 +29,10 @@ export function createStore(initial = {}) {
   // Template-op helpers that auto-update the store.
   const actions = {
     addRow(bandIdx)                            { setState({ template: Template.addRow(state.template, bandIdx) }); },
+    insertRowAt(bandIdx, atIdx)                { setState({ template: Template.insertRowAt(state.template, bandIdx, atIdx) }); },
     removeRow(bandIdx, rowIdx)                 { setState({ template: Template.removeRow(state.template, bandIdx, rowIdx) }); },
     addCell(bandIdx, rowIdx)                   { setState({ template: Template.addCell(state.template, bandIdx, rowIdx) }); },
+    insertCellAt(bandIdx, rowIdx, atIdx)       { setState({ template: Template.insertCellAt(state.template, bandIdx, rowIdx, atIdx) }); },
     removeCell(bandIdx, rowIdx, cellIdx)       { setState({ template: Template.removeCell(state.template, bandIdx, rowIdx, cellIdx) }); },
     setCell(bandIdx, rowIdx, cellIdx, patch)   { setState({ template: Template.setCell(state.template, bandIdx, rowIdx, cellIdx, patch) }); },
     setSheet(patch)                            { setState({ template: Template.setSheet(state.template, patch) }); },

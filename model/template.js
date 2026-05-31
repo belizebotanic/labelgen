@@ -29,16 +29,13 @@ export function create() {
       layer: 'engrave'
     },
     content: {
-      bands: [defaultBand('middle')]
+      bands: [{ name: 'middle', rows: [{ cells: [defaultCell('Hello')] }] }]
     }
   };
 }
 
-function defaultBand(name) {
-  return { name, rows: [defaultRow()] };
-}
 function defaultRow() {
-  return { cells: [defaultCell('Hello')] };
+  return { cells: [defaultCell()] };
 }
 function defaultCell(text = '') {
   return { text, align: 'center', italic: false, bold: false };
@@ -48,8 +45,14 @@ function defaultCell(text = '') {
 function clone(t) { return structuredClone(t); }
 
 export function addRow(t, bandIdx) {
+  return insertRowAt(t, bandIdx, t.content.bands[bandIdx].rows.length);
+}
+
+export function insertRowAt(t, bandIdx, atIdx) {
   const out = clone(t);
-  out.content.bands[bandIdx].rows.push(defaultRow());
+  const rows = out.content.bands[bandIdx].rows;
+  const clamped = Math.max(0, Math.min(atIdx, rows.length));
+  rows.splice(clamped, 0, defaultRow());
   return out;
 }
 
@@ -62,8 +65,14 @@ export function removeRow(t, bandIdx, rowIdx) {
 }
 
 export function addCell(t, bandIdx, rowIdx) {
+  return insertCellAt(t, bandIdx, rowIdx, t.content.bands[bandIdx].rows[rowIdx].cells.length);
+}
+
+export function insertCellAt(t, bandIdx, rowIdx, atIdx) {
   const out = clone(t);
-  out.content.bands[bandIdx].rows[rowIdx].cells.push(defaultCell());
+  const cells = out.content.bands[bandIdx].rows[rowIdx].cells;
+  const clamped = Math.max(0, Math.min(atIdx, cells.length));
+  cells.splice(clamped, 0, defaultCell());
   return out;
 }
 

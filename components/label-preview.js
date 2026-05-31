@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { renderLabel, renderSheet } from '../render/svg.js';
+import { renderLabelEditor, renderSheet } from '../render/svg.js';
 import { store } from '../store.js';
 
 class LabelPreview extends LitElement {
@@ -58,6 +58,21 @@ class LabelPreview extends LitElement {
       max-height: 70vh;
       border: 1px dashed var(--color-border);
     }
+    /* Editor hit zones (single-label preview only). Invisible by default;
+       a soft tint appears when the whole label is hovered so the user
+       discovers them, and the zone the cursor is on darkens. */
+    .surface svg .lg-hit {
+      fill: var(--color-accent);
+      opacity: 0;
+      cursor: pointer;
+      transition: opacity 80ms ease-out;
+    }
+    .surface svg:hover .lg-hit {
+      opacity: 0.18;
+    }
+    .surface svg .lg-hit:hover {
+      opacity: 0.65;
+    }
   `;
 
   _setMode(m) { store.actions.setViewMode(m); }
@@ -65,7 +80,22 @@ class LabelPreview extends LitElement {
   _onClick(e) {
     let n = e.target;
     while (n && n !== e.currentTarget) {
-      if (n.dataset && n.dataset.band != null) {
+      // Hit-zone overlays — insert row / cell at a specific position.
+      const action = n.dataset?.action;
+      if (action === 'insertRow') {
+        store.actions.insertRowAt(Number(n.dataset.band), Number(n.dataset.atIdx));
+        return;
+      }
+      if (action === 'insertCell') {
+        store.actions.insertCellAt(
+          Number(n.dataset.band),
+          Number(n.dataset.row),
+          Number(n.dataset.atIdx)
+        );
+        return;
+      }
+      // Content shape — select the underlying cell.
+      if (n.dataset && n.dataset.band != null && n.dataset.cell != null) {
         store.actions.setSelection({
           kind: 'cell',
           path: [Number(n.dataset.band), Number(n.dataset.row), Number(n.dataset.cell)]
@@ -96,7 +126,9 @@ class LabelPreview extends LitElement {
       const rows = csvRows ?? [];
       svgEl = renderSheet(template, rows);
     } else {
-      svgEl = renderLabel(template, row);
+      // Single-label preview uses the editor variant which adds hover-revealed
+      // "+ row" / "+ cell" hit zones. Grid view skips them — too dense.
+      svgEl = renderLabelEditor(template, row);
     }
     return html`
       <div class="toolbar">

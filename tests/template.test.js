@@ -58,6 +58,56 @@ describe('Template.addRow / removeRow', () => {
   });
 });
 
+describe('Template.insertRowAt', () => {
+  test('inserts at the beginning when atIdx=0', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, 0, { text: 'original' });
+    t = T.insertRowAt(t, 0, 0);
+    assertEq(t.content.bands[0].rows.length, 2);
+    assertEq(t.content.bands[0].rows[1].cells[0].text, 'original');
+  });
+  test('inserts at the end when atIdx=length', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, 0, { text: 'original' });
+    t = T.insertRowAt(t, 0, t.content.bands[0].rows.length);
+    assertEq(t.content.bands[0].rows[0].cells[0].text, 'original');
+    assertEq(t.content.bands[0].rows[1].cells[0].text, '');
+  });
+  test('inserts in the middle', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, 0, { text: 'A' });
+    t = T.addRow(t, 0);
+    t = T.setCell(t, 0, 1, 0, { text: 'C' });
+    t = T.insertRowAt(t, 0, 1);
+    assertEq(t.content.bands[0].rows.map(r => r.cells[0].text), ['A', '', 'C']);
+  });
+  test('clamps negative atIdx to 0', () => {
+    const t = T.insertRowAt(T.create(), 0, -5);
+    assertEq(t.content.bands[0].rows.length, 2);
+  });
+  test('clamps over-large atIdx to length', () => {
+    const t = T.insertRowAt(T.create(), 0, 999);
+    assertEq(t.content.bands[0].rows.length, 2);
+  });
+});
+
+describe('Template.insertCellAt', () => {
+  test('inserts at the beginning', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, 0, { text: 'B' });
+    t = T.insertCellAt(t, 0, 0, 0);
+    assertEq(t.content.bands[0].rows[0].cells.map(c => c.text), ['', 'B']);
+  });
+  test('inserts in the middle', () => {
+    let t = T.create();
+    t = T.setCell(t, 0, 0, 0, { text: 'A' });
+    t = T.addCell(t, 0, 0);
+    t = T.setCell(t, 0, 0, 1, { text: 'C' });
+    t = T.insertCellAt(t, 0, 0, 1);
+    assertEq(t.content.bands[0].rows[0].cells.map(c => c.text), ['A', '', 'C']);
+  });
+});
+
 describe('Template.addCell / removeCell', () => {
   test('addCell appends a default cell to the indexed row', () => {
     const t = T.addCell(T.create(), 0, 0);
