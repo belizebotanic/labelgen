@@ -138,8 +138,10 @@ class CsvImporter extends LitElement {
       border-top: var(--border);
       border-bottom: var(--border);
     }
-    th:first-child { border-left: var(--border); }
-    th:last-child  { border-right: var(--border); }
+    /* First / last data columns in the header get a side border so the
+       header reads as a bordered block flanked by the action gutters. */
+    thead th:nth-child(2) { border-left: var(--border); }
+    thead th:nth-last-child(2) { border-right: var(--border); }
     /* Action columns blend with the surrounding card chrome — they read as
        "outside" the data table so the row-delete trash can't be confused with
        a cell-level action. */
