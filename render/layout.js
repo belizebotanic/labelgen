@@ -108,6 +108,15 @@ export function layoutLabel(template, row) {
  * cells produce hit zones at the same boundary with the same `atIdx`; they
  * overlap visually but click the same action, so duplication is harmless.
  */
+function isTopmostBand(template, band) {
+  const me = BAND_POSITIONS[band.name];
+  return template.content.bands.every(b => (BAND_POSITIONS[b.name] ?? 0) >= me);
+}
+function isBottommostBand(template, band) {
+  const me = BAND_POSITIONS[band.name];
+  return template.content.bands.every(b => (BAND_POSITIONS[b.name] ?? 0) <= me);
+}
+
 export function layoutEditorOverlays(template) {
   const out = [];
   const g = labelGeometry(template);
@@ -116,61 +125,84 @@ export function layoutEditorOverlays(template) {
   for (const [bandIdx, band] of bands.entries()) {
     const bandTop = bandTopY(template, band);
     const rowH = g.bandH / band.rows.length;
+    const lastRowIdx = band.rows.length - 1;
 
     for (const [ri, row_] of band.rows.entries()) {
       const rowTop = bandTop + ri * rowH;
       const rowBottom = rowTop + rowH;
       const cellCount = row_.cells.length;
       const cellW = g.contentW / cellCount;
+      const lastCellIdx = cellCount - 1;
 
-      // + Row above (atIdx = ri)
+      // ---- Row hit zones (span full label width) ----
+
+      // "+ Row above" at atIdx = ri. If this is the first row of the topmost
+      // band, the zone extends up to the label's top edge.
+      const aboveExtend = ri === 0 && isTopmostBand(template, band);
+      const aboveTopY = aboveExtend ? 0 : rowTop - HIT_ZONE_MM / 2;
+      const aboveBotY = rowTop + HIT_ZONE_MM / 2;
       out.push({
         kind: 'hit',
         action: 'insertRow',
         bandIdx,
         atIdx: ri,
-        x_mm: g.contentX,
-        y_mm: rowTop - HIT_ZONE_MM / 2,
-        w_mm: g.contentW,
-        h_mm: HIT_ZONE_MM
+        x_mm: 0,
+        y_mm: aboveTopY,
+        w_mm: g.W,
+        h_mm: aboveBotY - aboveTopY
       });
-      // + Row below (atIdx = ri + 1)
+
+      // "+ Row below" at atIdx = ri+1. If this is the last row of the
+      // bottommost band, the zone extends down to the label's bottom edge.
+      const belowExtend = ri === lastRowIdx && isBottommostBand(template, band);
+      const belowTopY = rowBottom - HIT_ZONE_MM / 2;
+      const belowBotY = belowExtend ? g.H : rowBottom + HIT_ZONE_MM / 2;
       out.push({
         kind: 'hit',
         action: 'insertRow',
         bandIdx,
         atIdx: ri + 1,
-        x_mm: g.contentX,
-        y_mm: rowBottom - HIT_ZONE_MM / 2,
-        w_mm: g.contentW,
-        h_mm: HIT_ZONE_MM
+        x_mm: 0,
+        y_mm: belowTopY,
+        w_mm: g.W,
+        h_mm: belowBotY - belowTopY
       });
+
+      // ---- Cell hit zones (span row height; outermost extend to label edge) ----
 
       for (const [ci] of row_.cells.entries()) {
         const cellLeft = g.contentX + ci * cellW;
         const cellRight = cellLeft + cellW;
-        // + Cell before (atIdx = ci)
+
+        // "+ Cell before" at atIdx = ci
+        const beforeExtend = ci === 0;
+        const beforeLeftX  = beforeExtend ? 0 : cellLeft - HIT_ZONE_MM / 2;
+        const beforeRightX = cellLeft + HIT_ZONE_MM / 2;
         out.push({
           kind: 'hit',
           action: 'insertCell',
           bandIdx,
           rowIdx: ri,
           atIdx: ci,
-          x_mm: cellLeft - HIT_ZONE_MM / 2,
+          x_mm: beforeLeftX,
           y_mm: rowTop,
-          w_mm: HIT_ZONE_MM,
+          w_mm: beforeRightX - beforeLeftX,
           h_mm: rowH
         });
-        // + Cell after (atIdx = ci + 1)
+
+        // "+ Cell after" at atIdx = ci+1
+        const afterExtend = ci === lastCellIdx;
+        const afterLeftX  = cellRight - HIT_ZONE_MM / 2;
+        const afterRightX = afterExtend ? g.W : cellRight + HIT_ZONE_MM / 2;
         out.push({
           kind: 'hit',
           action: 'insertCell',
           bandIdx,
           rowIdx: ri,
           atIdx: ci + 1,
-          x_mm: cellRight - HIT_ZONE_MM / 2,
+          x_mm: afterLeftX,
           y_mm: rowTop,
-          w_mm: HIT_ZONE_MM,
+          w_mm: afterRightX - afterLeftX,
           h_mm: rowH
         });
       }
