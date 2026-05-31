@@ -1,71 +1,57 @@
-# labelgen (web)
+# labelgen
 
-Browser-based visual editor for SVG label sheets. Design a label layout, optionally
-load a sample CSV to preview real data, export single labels or full sheets as SVG,
-and share your design via URL. No backend, no production build.
+Browser-based visual editor for SVG label sheets. Design a label, optionally
+load CSV data to preview real values, and export single labels or full sheets.
+No backend, no production build.
 
-## Dev shell
+**Live app:** <https://brettatoms.github.io/labelgen/>
 
-This project uses [devenv](https://devenv.sh) to manage the dev environment
-(Node 24 from nixpkgs-unstable). With devenv installed:
+## What you can do
 
-```
-devenv shell
-npm install
-```
+- Edit row / column structure visually — click any cell to select, use the
+  surrounding **+** buttons to insert rows above/below or cells left/right
+- Per-cell text with `{{placeholder}}` tokens
+- Per-cell typography (align, italic, bold, optional font-size override)
+- Load CSV data (upload, paste, or include a public HTTPS URL in a share link)
+  to preview real values
+- Edit the CSV inline (Table or Text view, your choice) and click any row to
+  mark it as the active preview
+- Export the current label or the full sheet as SVG; save the template as
+  JSON; load a saved template back
+- Share a design as a URL — the template is encoded in the hash (`#t=...`)
+- Switch display units between mm and inches per card (storage stays in mm)
 
-If you want `cd`ing into the directory to auto-activate the shell, create a local
-direnv symlink (gitignored, so the auto-activation is opt-in per checkout):
+## Run locally
 
-```
-ln -s .envrc.devenv .envrc
-direnv allow
-```
+Requires Node 24. With [devenv](https://devenv.sh) installed:
 
-If you don't want devenv, any Node 24.x install also works — just `npm install`
-directly.
+    devenv shell
+    npm install
+    npm run dev          # http://localhost:8000/
 
-## Run locally (with HMR)
+`devenv` is optional — any Node 24 install works, just `npm install` and
+`npm run dev`. A direnv shortcut for auto-activating the devenv shell:
 
-```
-npm run dev
-```
+    ln -s .envrc.devenv .envrc
+    direnv allow
 
-Open <http://localhost:8000/>.
+The dev server is `@web/dev-server` with `@open-wc/dev-server-hmr` for Lit
+hot module replacement.
 
-## Run tests
+## Tests
 
-```
-npm run dev
-```
+    npm run dev
 
-Open <http://localhost:8000/tests/>. Confirm "N passed, 0 failed".
-
-A `python3 -m http.server 8000` fallback also works if you want to serve the repo
-without Node — you'll just lose HMR.
-
-## Deploy
-
-This is a static site. Enable GitHub Pages on the `main` branch root and the app
-will be served at `https://<you>.github.io/labelgen2/` (path depends on the repo
-name).
-
-## Sharing designs
-
-The current template is automatically encoded in the URL hash (`#t=...`). Copy the
-URL to share. Optionally include a public HTTPS URL to a CSV file using the
-"Copy share link with data URL..." button; the recipient's browser will fetch the
-CSV directly.
-
-## Architecture
-
-See `docs/superpowers/specs/2026-05-30-labelgen-web-design.md` for the design,
-and `docs/superpowers/plans/2026-05-30-labelgen-web-implementation.md` for the
-implementation plan.
+Open <http://localhost:8000/tests/> and confirm "N passed, 0 failed".
 
 ## Stack
 
-- [Lit 3](https://lit.dev/) — custom elements with reactive properties
-- [lz-string](https://github.com/pieroxy/lz-string) — URL-safe template compression
-- [PapaParse](https://www.papaparse.com/) — CSV parsing
-- No production build toolchain. Modules loaded via ES module import map from esm.sh.
+- [Lit 3](https://lit.dev) — custom elements with reactive properties
+- [lz-string](https://github.com/pieroxy/lz-string) — URL-safe template
+  compression for share links
+- [PapaParse](https://www.papaparse.com) — CSV parsing
+- [Lucide](https://lucide.dev) — icons
+
+All runtime libraries are loaded via an ES module import map from
+[esm.sh](https://esm.sh) — no production build step. Deploy is the static
+files in the repo root.
