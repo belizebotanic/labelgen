@@ -121,17 +121,36 @@ class CsvImporter extends LitElement {
     .table-wrap {
       max-height: 280px;
       overflow: auto;
-      border: var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--color-bg);
+      background: transparent;
     }
     table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: var(--font-size-sm);
     }
-    thead { position: sticky; top: 0; background: var(--color-surface); }
-    th { padding: var(--space-1) var(--space-2); border-bottom: var(--border); text-align: left; font-weight: 600; }
+    thead { position: sticky; top: 0; z-index: 1; background: var(--color-surface); }
+    th {
+      padding: var(--space-1) var(--space-2);
+      text-align: left;
+      font-weight: 600;
+      background: var(--color-bg);
+      border-top: var(--border);
+      border-bottom: var(--border);
+    }
+    th:first-child { border-left: var(--border); }
+    th:last-child  { border-right: var(--border); }
+    /* Action columns blend with the surrounding card chrome — they read as
+       "outside" the data table so the row-delete trash can't be confused with
+       a cell-level action. */
+    th.col-actions {
+      background: var(--color-surface);
+      border-top: 0;
+      border-bottom: 0;
+      border-left: 0;
+      border-right: 0;
+      width: 32px;
+    }
     th input {
       flex: 1;
       padding: 2px var(--space-1);
@@ -145,8 +164,24 @@ class CsvImporter extends LitElement {
     th input:hover { border-color: var(--color-border); }
     th input:focus { outline: none; border-color: var(--color-accent); background: var(--color-bg); }
     th .col-head { display: flex; align-items: center; gap: 2px; }
-    th.col-actions, td.row-actions { width: 28px; }
-    td { padding: 0; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent); }
+    td {
+      padding: 0;
+      background: var(--color-bg);
+      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    }
+    td:first-of-type, td:last-child { background: var(--color-surface); }
+    td.row-actions {
+      width: 32px;
+      background: var(--color-surface);
+      border-bottom: 0;
+      text-align: center;
+    }
+    tbody tr:last-child td { border-bottom: var(--border); }
+    tbody tr:last-child td.row-actions { border-bottom: 0; }
+    /* Outer data-cell borders */
+    tbody td:nth-child(2) { border-left: var(--border); }
+    tbody td:nth-last-child(2) { border-right: var(--border); }
+
     td input {
       width: 100%;
       padding: var(--space-1) var(--space-2);
@@ -156,8 +191,9 @@ class CsvImporter extends LitElement {
     }
     td input:focus { outline: 1px solid var(--color-accent); outline-offset: -1px; }
     tr.active td { background: var(--color-accent-soft); }
-    tr.active td:first-child { box-shadow: inset 3px 0 0 var(--color-accent); }
-    tr.active-trigger { cursor: pointer; }
+    /* Don't tint the action columns when the row is active. */
+    tr.active td.row-actions { background: var(--color-surface); }
+    tr.active td:nth-child(2) { box-shadow: inset 3px 0 0 var(--color-accent); }
     .icon-btn {
       display: inline-flex; align-items: center; justify-content: center;
       width: 24px; height: 24px;
