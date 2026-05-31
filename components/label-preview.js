@@ -1,10 +1,11 @@
 import { LitElement, html, css } from 'lit';
-import { renderLabelEditor, renderLabelToString, renderSheet, renderSheetToString } from '../render/svg.js';
+import { renderLabel, renderLabelEditor, renderLabelToString, renderSheet, renderSheetToString } from '../render/svg.js';
 import { encode as encodeShare } from '../model/share-url.js';
 import { validate as validateTemplate, create as createTemplate } from '../model/template.js';
+import { filledRowsFor } from '../model/placeholders.js';
 import { store, defaultCsvRows } from '../store.js';
 import {
-  iconSquare, iconGrid, iconImage, iconPrinter,
+  iconSquare, iconGrid, iconGrid3x3, iconImage, iconPrinter,
   iconSave, iconFolderOpen, iconLink, iconLink2, iconFilePlus
 } from './icons.js';
 
@@ -284,8 +285,12 @@ class LabelPreview extends LitElement {
   }
   _exportSheet() {
     const { template, csvRows } = this.state;
-    const rows = csvRows ?? [];
+    const rows = filledRowsFor(template, csvRows ?? []);
     const perPage = template.sheet.rows * template.sheet.cols;
+    if (rows.length === 0) {
+      this._downloadText('sheet.svg', renderSheetToString(template, []), 'image/svg+xml');
+      return;
+    }
     if (rows.length <= perPage) {
       this._downloadText('sheet.svg', renderSheetToString(template, rows), 'image/svg+xml');
       return;
@@ -337,14 +342,16 @@ class LabelPreview extends LitElement {
   }
 
   render() {
-    const { template, csvRows, activeRowIdx, viewMode, selection } = this.state;
+    const { template, csvRows, activeRowIdx, viewMode, selection, showCellGrid } = this.state;
     const row = (csvRows && activeRowIdx != null) ? csvRows[activeRowIdx] : null;
     const cellSelected = selection?.kind === 'cell';
     let svgEl;
     if (viewMode === 'grid') {
-      svgEl = renderSheet(template, csvRows ?? []);
-    } else {
+      svgEl = renderSheet(template, filledRowsFor(template, csvRows ?? []));
+    } else if (showCellGrid) {
       svgEl = renderLabelEditor(template, row, selection);
+    } else {
+      svgEl = renderLabel(template, row);
     }
 
     return html`
@@ -356,6 +363,12 @@ class LabelPreview extends LitElement {
           <button class="view-btn" title="Grid view (full sheet)"
                   aria-pressed=${viewMode === 'grid'}
                   @click=${() => this._setMode('grid')}>${iconGrid}</button>
+          ${viewMode === 'single' ? html`
+            <button class="view-btn"
+                    title=${showCellGrid ? 'Hide cell grid' : 'Show cell grid'}
+                    aria-pressed=${showCellGrid}
+                    @click=${() => store.actions.toggleCellGrid()}>${iconGrid3x3}</button>
+          ` : ''}
           <span class="breadcrumb ${selection ? 'selected' : ''}">${this._breadcrumbText()}</span>
           ${this._toast ? html`<span class="toast">${this._toast}</span>` : ''}
         </div>

@@ -1,5 +1,5 @@
 import * as Template from './model/template.js';
-import { saveTemplate, loadTemplate } from './model/storage.js';
+import { saveTemplate, loadTemplate, saveCsvRows, loadCsvRows } from './model/storage.js';
 import { encode as encodeShare, decode as decodeShare } from './model/share-url.js';
 
 const DEBOUNCE_MS = 250;
@@ -24,6 +24,8 @@ export function createStore(initial = {}) {
     selection: initial.selection ?? null,
     dataUrl: initial.dataUrl ?? null,
     viewMode: initial.viewMode ?? 'single', // 'single' | 'grid'
+    // Cell-grid overlay visibility in single view (session-only).
+    showCellGrid: initial.showCellGrid ?? true,
     // Per-card display unit preference (session-only; not persisted, not shared).
     panelUnits: initial.panelUnits ?? { sheet: 'mm', label: 'mm' }
   };
@@ -52,6 +54,7 @@ export function createStore(initial = {}) {
     setActiveRowIdx(i)                         { setState({ activeRowIdx: i }); },
     setSelection(sel)                          { setState({ selection: sel }); },
     setViewMode(mode)                          { setState({ viewMode: mode }); },
+    toggleCellGrid()                           { setState({ showCellGrid: !state.showCellGrid }); },
     setPanelUnit(panel, unit)                  { setState({ panelUnits: { ...state.panelUnits, [panel]: unit } }); }
   };
 
@@ -85,21 +88,52 @@ store.subscribe(() => {
   }
 });
 
+let csvSaveTimer = null;
+let lastCsvRef = null;
+function scheduleCsvSave() {
+  if (csvSaveTimer) clearTimeout(csvSaveTimer);
+  csvSaveTimer = setTimeout(() => {
+    csvSaveTimer = null;
+    saveCsvRows(store.getState().csvRows ?? []);
+  }, DEBOUNCE_MS);
+}
+store.subscribe(() => {
+  const s = store.getState();
+  if (s.csvRows !== lastCsvRef) {
+    lastCsvRef = s.csvRows;
+    scheduleCsvSave();
+  }
+});
+
 /**
  * Hydrate the store from URL hash → localStorage → default.
  * Returns { dataUrl } so the caller can kick off the remote fetch.
  */
 export function hydrate() {
   const fromUrl = decodeShare(location.hash);
+  // Restore CSV from localStorage only when no remote data URL is in play —
+  // a share-link dataUrl will overwrite csvRows once the fetch resolves, so
+  // there is no point restoring local rows that would be immediately replaced.
   if (fromUrl.template) {
-    store.setState({ template: fromUrl.template, dataUrl: fromUrl.dataUrl ?? null });
+    const patch = { template: fromUrl.template, dataUrl: fromUrl.dataUrl ?? null };
+    if (!fromUrl.dataUrl) {
+      const savedCsv = loadCsvRows();
+      if (savedCsv && savedCsv.length > 0) {
+        patch.csvRows = savedCsv;
+        patch.activeRowIdx = 0;
+      }
+    }
+    store.setState(patch);
     return { dataUrl: fromUrl.dataUrl ?? null, errors: fromUrl.errors };
   }
+  const patch = {};
   const fromStorage = loadTemplate();
-  if (fromStorage) {
-    store.setState({ template: fromStorage });
-    return { dataUrl: null, errors: fromUrl.errors };
+  if (fromStorage) patch.template = fromStorage;
+  const savedCsv = loadCsvRows();
+  if (savedCsv && savedCsv.length > 0) {
+    patch.csvRows = savedCsv;
+    patch.activeRowIdx = 0;
   }
-  // Default template is already in store from createStore().
+  if (Object.keys(patch).length) store.setState(patch);
   return { dataUrl: null, errors: fromUrl.errors };
 }

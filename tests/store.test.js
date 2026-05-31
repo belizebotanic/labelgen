@@ -6,8 +6,10 @@ describe('store', () => {
   test('getState returns initial state', () => {
     const s = createStore({ template: T.create() });
     assertEq(s.getState().template.version, T.VERSION);
-    assertEq(s.getState().csvRows, null);
-    assertEq(s.getState().activeRowIdx, null);
+    // csvRows defaults to a single empty 2-column row so the data table is
+    // editable out of the box; activeRowIdx points at it.
+    assertEq(s.getState().csvRows.length, 1);
+    assertEq(s.getState().activeRowIdx, 0);
     assertEq(s.getState().selection, null);
   });
   test('setState merges patches and notifies subscribers', () => {

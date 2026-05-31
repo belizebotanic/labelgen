@@ -211,4 +211,33 @@ describe('Template.validate — rejections', () => {
     t.label.layer = 'pretty please';
     assertThrows(() => T.validate(t));
   });
+  test('default cell includes wrap=false', () => {
+    const t = T.create();
+    assertEq(t.content.rows[0].cells[0].wrap, false);
+  });
+  test('accepts missing wrap (backwards compat)', () => {
+    const t = T.create();
+    delete t.content.rows[0].cells[0].wrap;
+    T.validate(t);
+  });
+  test('rejects non-boolean wrap', () => {
+    const t = T.create();
+    t.content.rows[0].cells[0].wrap = 'yes';
+    assertThrows(() => T.validate(t));
+  });
+  test('accepts integer max_lines in range', () => {
+    const t = T.create();
+    t.content.rows[0].cells[0].max_lines = 2;
+    T.validate(t);
+  });
+  test('rejects non-integer max_lines', () => {
+    const t = T.create();
+    t.content.rows[0].cells[0].max_lines = 1.5;
+    assertThrows(() => T.validate(t));
+  });
+  test('rejects zero max_lines', () => {
+    const t = T.create();
+    t.content.rows[0].cells[0].max_lines = 0;
+    assertThrows(() => T.validate(t));
+  });
 });

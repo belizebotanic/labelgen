@@ -7,6 +7,7 @@ export const MAX_TEXT_LEN = 4096;
 export const MAX_ROWS = 50;
 export const MAX_CELLS_PER_ROW = 20;
 export const VALID_ALIGNS = ['left', 'center', 'right'];
+export const VALID_VALIGNS = ['top', 'middle', 'bottom'];
 export const VALID_LAYERS = ['engrave', 'cut'];
 
 export const VERSION = 2;
@@ -43,7 +44,7 @@ export function create() {
 }
 
 function defaultCell(text = '') {
-  return { text, align: 'center', italic: false, bold: false };
+  return { text, align: 'center', valign: 'middle', wrap: false, padding_mm: 0, italic: false, bold: false };
 }
 
 function defaultRow() {
@@ -178,8 +179,15 @@ export function validate(t) {
       if (!cell || typeof cell !== 'object') err(`row ${ri} cell ${ci} not object`);
       reqStr(cell, 'text', MAX_TEXT_LEN);
       reqEnum(cell, 'align', VALID_ALIGNS);
+      if ('valign' in cell) reqEnum(cell, 'valign', VALID_VALIGNS);
       reqBool(cell, 'italic');
       reqBool(cell, 'bold');
+      if ('wrap' in cell) reqBool(cell, 'wrap');
+      if ('max_lines' in cell) {
+        reqNum(cell, 'max_lines', 1, 100);
+        if (!Number.isInteger(cell.max_lines)) err(`max_lines must be an integer`);
+      }
+      if ('padding_mm' in cell) reqNum(cell, 'padding_mm', 0, MAX_DIM_MM);
       if ('font_size_pt' in cell) reqNum(cell, 'font_size_pt', MIN_FONT_PT, MAX_FONT_PT);
     }
   }

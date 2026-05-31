@@ -46,19 +46,21 @@ export function renderSheet(template, rows) {
   const labelW = template.label.width_mm;
   const labelH = template.label.height_mm;
 
-  let idx = 0;
-  for (let r = 0; r < R; r++) {
-    for (let c = 0; c < C; c++) {
-      const x = M + c * (labelW + G);
-      const y = M + r * (labelH + G);
-      const row = rows[idx++] ?? null;
-      const g = document.createElementNS(SVG_NS, 'g');
-      g.setAttribute('transform', `translate(${x},${y})`);
-      for (const shape of layoutLabel(template, row)) {
-        g.appendChild(shapeToNode(shape));
-      }
-      svg.appendChild(g);
+  // Render one label per provided row, in row-major grid order. Empty grid
+  // slots beyond rows.length stay blank — no placeholder ghosts on the sheet.
+  const perSheet = R * C;
+  const n = Math.min(rows.length, perSheet);
+  for (let i = 0; i < n; i++) {
+    const r = Math.floor(i / C);
+    const c = i % C;
+    const x = M + c * (labelW + G);
+    const y = M + r * (labelH + G);
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('transform', `translate(${x},${y})`);
+    for (const shape of layoutLabel(template, rows[i])) {
+      g.appendChild(shapeToNode(shape));
     }
+    svg.appendChild(g);
   }
   return svg;
 }
@@ -108,8 +110,20 @@ function textNode(s) {
     t.setAttribute('data-cell', s.cellIdx);
     t.style.cursor = 'pointer';
   }
-  // SAFETY: textContent escapes user input; never assign innerHTML.
-  t.textContent = s.text;
+  if (s.lines) {
+    const dy_mm = s.lineHeight_mm;
+    for (let i = 0; i < s.lines.length; i++) {
+      const tspan = document.createElementNS(SVG_NS, 'tspan');
+      tspan.setAttribute('x', s.x_mm);
+      if (i > 0) tspan.setAttribute('dy', dy_mm);
+      // SAFETY: textContent escapes user input; never assign innerHTML.
+      tspan.textContent = s.lines[i];
+      t.appendChild(tspan);
+    }
+  } else {
+    // SAFETY: textContent escapes user input; never assign innerHTML.
+    t.textContent = s.text;
+  }
   return t;
 }
 

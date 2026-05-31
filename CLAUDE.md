@@ -73,8 +73,21 @@ npm install         # one time
 npm run dev         # serves at http://localhost:8000/
 ```
 
-Tests run in the browser at `/tests/`. Pure-module tests can also be
-sanity-checked from Node:
+Tests run in the browser at `/tests/`. The runner writes pass/fail results
+into the page DOM, so headless Chromium can scrape them without a real
+browser window:
+
+```
+/Applications/Chromium.app/Contents/MacOS/Chromium \
+  --headless --disable-gpu --dump-dom --virtual-time-budget=4000 \
+  http://localhost:8000/tests/ 2>/dev/null | grep -E "passed|FAIL"
+```
+
+The summary line (`N passed, M failed`) and each failing test's error
+message appear inline in the dumped HTML. Use this to verify the suite
+after changes instead of asking the user to paste results.
+
+Pure-module tests can also be sanity-checked from Node:
 
 ```
 node -e "import('./model/template.js').then(T => console.log(T.validate(T.create()).version))"

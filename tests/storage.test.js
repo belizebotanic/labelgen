@@ -31,3 +31,38 @@ describe('storage save/load roundtrip', () => {
     localStorage.removeItem(KEY);
   });
 });
+
+describe('storage CSV roundtrip', () => {
+  const CSV_KEY = '__test_labelgen_csv__';
+
+  test('saveCsvRows then loadCsvRows returns the same rows', () => {
+    localStorage.removeItem(CSV_KEY);
+    const rows = [{ name: 'Ficus', latin: 'Ficus benjamina' }, { name: 'Palm', latin: 'Roystonea oleracea' }];
+    Storage._saveCsvTo(CSV_KEY, rows);
+    assertEq(Storage._loadCsvFrom(CSV_KEY), rows);
+    localStorage.removeItem(CSV_KEY);
+  });
+
+  test('returns null when missing', () => {
+    localStorage.removeItem(CSV_KEY);
+    assertEq(Storage._loadCsvFrom(CSV_KEY), null);
+  });
+
+  test('returns null on malformed JSON', () => {
+    localStorage.setItem(CSV_KEY, '{not json');
+    assertEq(Storage._loadCsvFrom(CSV_KEY), null);
+    localStorage.removeItem(CSV_KEY);
+  });
+
+  test('returns null when rows is not an array', () => {
+    localStorage.setItem(CSV_KEY, JSON.stringify({ rows: 'oops' }));
+    assertEq(Storage._loadCsvFrom(CSV_KEY), null);
+    localStorage.removeItem(CSV_KEY);
+  });
+
+  test('returns null when a row has non-string values', () => {
+    localStorage.setItem(CSV_KEY, JSON.stringify({ rows: [{ x: 1 }] }));
+    assertEq(Storage._loadCsvFrom(CSV_KEY), null);
+    localStorage.removeItem(CSV_KEY);
+  });
+});

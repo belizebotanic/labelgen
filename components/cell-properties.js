@@ -146,12 +146,57 @@ class CellProperties extends LitElement {
             </select>
           </div>
           <div class="row">
+            <label>V-Align</label>
+            <select .value=${cell.valign ?? 'middle'} @change=${(e) => this._patch({ valign: e.target.value })}>
+              <option value="top">Top</option>
+              <option value="middle">Middle</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </div>
+          <div class="row">
             <label>Italic</label>
             <input type="checkbox" .checked=${cell.italic} @change=${(e) => this._patch({ italic: e.target.checked })}>
           </div>
           <div class="row">
             <label>Bold</label>
             <input type="checkbox" .checked=${cell.bold} @change=${(e) => this._patch({ bold: e.target.checked })}>
+          </div>
+          <div class="row">
+            <label>Wrap</label>
+            <input type="checkbox" .checked=${!!cell.wrap}
+                   @change=${(e) => {
+                     const on = e.target.checked;
+                     if (on && cell.max_lines == null) {
+                       this._patch({ wrap: true, max_lines: 2 });
+                     } else {
+                       this._patch({ wrap: on });
+                     }
+                   }}>
+          </div>
+          <div class="row">
+            <label>Max lines</label>
+            <input type="number" min="1" step="1"
+                   ?disabled=${!cell.wrap}
+                   .value=${cell.max_lines ?? ''}
+                   @input=${(e) => {
+                     const raw = e.target.value;
+                     const v = raw === '' ? undefined : parseInt(raw, 10);
+                     if (raw !== '' && (!Number.isInteger(v) || v < 1)) return;
+                     if (v === cell.max_lines) return;
+                     this._patch({ max_lines: v });
+                   }}>
+          </div>
+          <div class="row">
+            <label>Padding (mm)</label>
+            <input type="number" min="0" step="0.5"
+                   .value=${cell.padding_mm ?? 0}
+                   @input=${(e) => {
+                     const raw = e.target.value;
+                     const v = raw === '' ? 0 : parseFloat(raw);
+                     if (raw !== '' && (!Number.isFinite(v) || v < 0)) return;
+                     if (v === (cell.padding_mm ?? 0)) return;
+                     this._patch({ padding_mm: v });
+                   }}>
           </div>
           <div class="row">
             <label>Font size override (pt)</label>

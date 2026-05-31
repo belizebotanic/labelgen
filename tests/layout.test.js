@@ -1,6 +1,6 @@
-import { describe, test, assertTrue } from './runner.js';
+import { describe, test, assertTrue, assertEq } from './runner.js';
 import * as T from '../model/template.js';
-import { layoutLabel } from '../render/layout.js';
+import { layoutLabel, wrapToLines } from '../render/layout.js';
 
 describe('layoutLabel: defaults', () => {
   test('default template produces text shapes and a border rect', () => {
@@ -53,5 +53,54 @@ describe('layoutLabel: alignment within row cells', () => {
     const l = shapes.find(s => s.text === 'L');
     const r = shapes.find(s => s.text === 'R');
     assertTrue(l.x_mm < r.x_mm, `expected left < right, got ${l.x_mm} vs ${r.x_mm}`);
+  });
+});
+
+describe('layoutLabel: wrap flag', () => {
+  test('wrap=false keeps single-line text shape (no lines array)', () => {
+    const t = T.setCell(T.create(), 1, 0, { text: 'Hello world', wrap: false });
+    const text = layoutLabel(t, null).find(s => s.kind === 'text' && s.text === 'Hello world');
+    assertTrue(text != null, 'expected single-line text');
+    assertTrue(text.lines == null, 'expected no lines array when wrap=false');
+  });
+
+  test('wrap=true on long text emits multi-line lines array', () => {
+    // Force a very narrow cell so wrapping is unambiguous.
+    let t = T.create();
+    t = T.setCell(t, 1, 0, {
+      text: 'one two three four five six seven',
+      wrap: true,
+      // unbounded — no truncation
+    });
+    // Squeeze the label so the single-cell row 1 is narrow.
+    t = { ...t, label: { ...t.label, width_mm: 20, padding_mm: 1 } };
+    const text = layoutLabel(t, null).find(s => s.kind === 'text' && s.rowIdx === 1 && s.cellIdx === 0);
+    assertTrue(text != null && Array.isArray(text.lines), 'expected lines array');
+    assertTrue(text.lines.length >= 2, `expected >=2 lines, got ${text.lines.length}`);
+  });
+
+  test('max_lines caps lines and ellipsizes the last', () => {
+    let t = T.create();
+    t = T.setCell(t, 1, 0, {
+      text: 'one two three four five six seven eight nine ten',
+      wrap: true,
+      max_lines: 2
+    });
+    t = { ...t, label: { ...t.label, width_mm: 20, padding_mm: 1 } };
+    const text = layoutLabel(t, null).find(s => s.kind === 'text' && s.rowIdx === 1 && s.cellIdx === 0);
+    assertEq(text.lines.length, 2);
+    assertTrue(text.lines[1].endsWith('…'), `expected last line to end with ellipsis, got: ${text.lines[1]}`);
+  });
+
+  test('wrapToLines returns single line when input fits', () => {
+    const lines = wrapToLines('hi', 100, { sizePt: 10, family: 'SansSerif', italic: false, bold: false });
+    assertEq(lines, ['hi']);
+  });
+
+  test('wrapToLines honors explicit newlines as hard breaks', () => {
+    const lines = wrapToLines('line one\nline two', 100, { sizePt: 10, family: 'SansSerif', italic: false, bold: false });
+    assertEq(lines.length, 2);
+    assertEq(lines[0], 'line one');
+    assertEq(lines[1], 'line two');
   });
 });

@@ -27,6 +27,34 @@ export function substitute(text, row) {
   });
 }
 
+/**
+ * True if every placeholder referenced anywhere in `template` has a non-empty
+ * value on `row`. A missing key, a null/undefined value, or a whitespace-only
+ * string all count as unfilled. Templates with no placeholders return true
+ * for any row.
+ */
+export function isRowFilled(template, row) {
+  if (row == null) return false;
+  const names = listInTemplate(template);
+  if (names.length === 0) return true;
+  for (const name of names) {
+    if (!Object.prototype.hasOwnProperty.call(row, name)) return false;
+    const v = row[name];
+    if (v == null) return false;
+    if (typeof v === 'string' && v.trim() === '') return false;
+  }
+  return true;
+}
+
+/**
+ * Subset of `rows` that have every template placeholder filled. Preserves the
+ * original order so sheet rendering still flows row-major in CSV order.
+ */
+export function filledRowsFor(template, rows) {
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((r) => isRowFilled(template, r));
+}
+
 export function listInTemplate(template) {
   const seen = new Set();
   const out = [];
