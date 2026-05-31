@@ -170,12 +170,17 @@ class CsvImporter extends LitElement {
       padding: 0;
       background: var(--color-bg);
       border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
     }
+    /* Vertical separators between data columns in the header too. */
+    thead th { border-right: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent); }
+    thead th.col-actions { border-right: 0; }
     td:first-of-type, td:last-child { background: var(--color-surface); }
     td.row-actions {
       width: 32px;
       background: var(--color-surface);
       border-bottom: 0;
+      border-right: 0;
       text-align: center;
     }
     tbody tr:last-child td { border-bottom: var(--border); }
