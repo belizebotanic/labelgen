@@ -55,16 +55,23 @@ class SheetPanel extends LitElement {
   `;
 
   _onLength(key) {
-    const unit = this.state.panelUnits.sheet;
     return (e) => {
+      const unit = this.state.panelUnits.sheet;
       const v = parseFloat(e.target.value);
-      if (Number.isFinite(v)) store.actions.setSheet({ [key]: toMm(v, unit) });
+      if (!Number.isFinite(v)) return;
+      const newMm = toMm(v, unit);
+      // Skip if unchanged so mid-typing tokens like "0." (which parse to 0)
+      // don't trigger a re-render that overwrites the user's typing.
+      if (newMm === this.state.template.sheet[key]) return;
+      store.actions.setSheet({ [key]: newMm });
     };
   }
   _onInt(key) {
     return (e) => {
       const v = parseInt(e.target.value, 10);
-      if (Number.isFinite(v) && v > 0) store.actions.setSheet({ [key]: v });
+      if (!Number.isFinite(v) || v < 1) return;
+      if (v === this.state.template.sheet[key]) return;
+      store.actions.setSheet({ [key]: v });
     };
   }
   _onUnit(e) {
@@ -94,12 +101,12 @@ class SheetPanel extends LitElement {
               <option value="in">in</option>
             </select>
           </div>
-          <div class="row"><label>Width (${u})</label> <input type="number" step=${step} min="0.1" .value=${v(s.width_mm)}  @change=${this._onLength('width_mm')}></div>
-          <div class="row"><label>Height (${u})</label><input type="number" step=${step} min="0.1" .value=${v(s.height_mm)} @change=${this._onLength('height_mm')}></div>
-          <div class="row"><label>Margin (${u})</label><input type="number" step=${step} min="0"   .value=${v(s.margin_mm)} @change=${this._onLength('margin_mm')}></div>
-          <div class="row"><label>Gutter (${u})</label><input type="number" step=${step} min="0"   .value=${v(s.gutter_mm)} @change=${this._onLength('gutter_mm')}></div>
-          <div class="row"><label>Rows</label>         <input type="number" min="1" step="1" .value=${s.rows} @change=${this._onInt('rows')}></div>
-          <div class="row"><label>Columns</label>      <input type="number" min="1" step="1" .value=${s.cols} @change=${this._onInt('cols')}></div>
+          <div class="row"><label>Width (${u})</label> <input type="number" step=${step} min="0.1" .value=${v(s.width_mm)}  @input=${this._onLength('width_mm')}></div>
+          <div class="row"><label>Height (${u})</label><input type="number" step=${step} min="0.1" .value=${v(s.height_mm)} @input=${this._onLength('height_mm')}></div>
+          <div class="row"><label>Margin (${u})</label><input type="number" step=${step} min="0"   .value=${v(s.margin_mm)} @input=${this._onLength('margin_mm')}></div>
+          <div class="row"><label>Gutter (${u})</label><input type="number" step=${step} min="0"   .value=${v(s.gutter_mm)} @input=${this._onLength('gutter_mm')}></div>
+          <div class="row"><label>Rows</label>         <input type="number" min="1" step="1" .value=${s.rows} @input=${this._onInt('rows')}></div>
+          <div class="row"><label>Columns</label>      <input type="number" min="1" step="1" .value=${s.cols} @input=${this._onInt('cols')}></div>
         </div>
       </details>
     `;

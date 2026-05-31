@@ -156,9 +156,12 @@ class CellProperties extends LitElement {
           <div class="row">
             <label>Font size override (pt)</label>
             <input type="number" min="1" .value=${cell.font_size_pt ?? ''}
-                   @change=${(e) => {
-                     const v = parseFloat(e.target.value);
-                     this._patch({ font_size_pt: Number.isFinite(v) ? v : undefined });
+                   @input=${(e) => {
+                     const raw = e.target.value;
+                     const v = raw === '' ? undefined : parseFloat(raw);
+                     if (raw !== '' && !Number.isFinite(v)) return;
+                     if (v === cell.font_size_pt) return;
+                     this._patch({ font_size_pt: v });
                    }}>
           </div>
         </div>

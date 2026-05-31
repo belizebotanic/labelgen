@@ -49,22 +49,31 @@ class LabelPanel extends LitElement {
   `;
 
   _onLength(key) {
-    const unit = this.state.panelUnits.label;
     return (e) => {
+      const unit = this.state.panelUnits.label;
       const v = parseFloat(e.target.value);
-      if (Number.isFinite(v)) store.actions.setLabel({ [key]: toMm(v, unit) });
+      if (!Number.isFinite(v)) return;
+      const newMm = toMm(v, unit);
+      if (newMm === this.state.template.label[key]) return;
+      store.actions.setLabel({ [key]: newMm });
     };
   }
   _onBorder(e) {
     const unit = this.state.panelUnits.label;
     const v = parseFloat(e.target.value);
-    if (Number.isFinite(v)) store.actions.setLabel({ border: { width_mm: toMm(v, unit) } });
+    if (!Number.isFinite(v)) return;
+    const newMm = toMm(v, unit);
+    if (newMm === this.state.template.label.border.width_mm) return;
+    store.actions.setLabel({ border: { width_mm: newMm } });
   }
   _onFontSize(e) {
     const v = parseFloat(e.target.value);
-    if (Number.isFinite(v)) store.actions.setLabel({ font: { size_pt: v } });
+    if (!Number.isFinite(v)) return;
+    if (v === this.state.template.label.font.size_pt) return;
+    store.actions.setLabel({ font: { size_pt: v } });
   }
   _onFontFamily(e) {
+    if (e.target.value === this.state.template.label.font.family) return;
     store.actions.setLabel({ font: { family: e.target.value } });
   }
   _onUnit(e) {
@@ -94,13 +103,13 @@ class LabelPanel extends LitElement {
               <option value="in">in</option>
             </select>
           </div>
-          <div class="row"><label>Width (${u})</label>     <input type="number" step=${step} min="0.1" .value=${v(l.width_mm)}  @change=${this._onLength('width_mm')}></div>
-          <div class="row"><label>Height (${u})</label>    <input type="number" step=${step} min="0.1" .value=${v(l.height_mm)} @change=${this._onLength('height_mm')}></div>
-          <div class="row"><label>Padding (${u})</label>   <input type="number" step=${step} min="0"   .value=${v(l.padding_mm)} @change=${this._onLength('padding_mm')}></div>
-          <div class="row"><label>Corner R (${u})</label>  <input type="number" step=${step} min="0"   .value=${v(l.corner_radius_mm)} @change=${this._onLength('corner_radius_mm')}></div>
-          <div class="row"><label>Border W (${u})</label>  <input type="number" step=${step} min="0"   .value=${v(l.border.width_mm)} @change=${this._onBorder}></div>
-          <div class="row"><label>Font family</label>      <input type="text" .value=${l.font.family} @change=${this._onFontFamily}></div>
-          <div class="row"><label>Font size (pt)</label>   <input type="number" min="1" .value=${l.font.size_pt} @change=${this._onFontSize}></div>
+          <div class="row"><label>Width (${u})</label>     <input type="number" step=${step} min="0.1" .value=${v(l.width_mm)}  @input=${this._onLength('width_mm')}></div>
+          <div class="row"><label>Height (${u})</label>    <input type="number" step=${step} min="0.1" .value=${v(l.height_mm)} @input=${this._onLength('height_mm')}></div>
+          <div class="row"><label>Padding (${u})</label>   <input type="number" step=${step} min="0"   .value=${v(l.padding_mm)} @input=${this._onLength('padding_mm')}></div>
+          <div class="row"><label>Corner R (${u})</label>  <input type="number" step=${step} min="0"   .value=${v(l.corner_radius_mm)} @input=${this._onLength('corner_radius_mm')}></div>
+          <div class="row"><label>Border W (${u})</label>  <input type="number" step=${step} min="0"   .value=${v(l.border.width_mm)} @input=${this._onBorder}></div>
+          <div class="row"><label>Font family</label>      <input type="text" .value=${l.font.family} @input=${this._onFontFamily}></div>
+          <div class="row"><label>Font size (pt)</label>   <input type="number" min="1" .value=${l.font.size_pt} @input=${this._onFontSize}></div>
         </div>
       </details>
     `;
