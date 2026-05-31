@@ -15,7 +15,9 @@ export function createStore(initial = {}) {
     activeRowIdx: initial.activeRowIdx ?? null,
     selection: initial.selection ?? null,
     dataUrl: initial.dataUrl ?? null,
-    viewMode: initial.viewMode ?? 'single' // 'single' | 'grid'
+    viewMode: initial.viewMode ?? 'single', // 'single' | 'grid'
+    // Per-card display unit preference (session-only; not persisted, not shared).
+    panelUnits: initial.panelUnits ?? { sheet: 'mm', label: 'mm' }
   };
   const subs = new Set();
 
@@ -41,7 +43,8 @@ export function createStore(initial = {}) {
     setCsvRows(rows, dataUrl = null)           { setState({ csvRows: rows, activeRowIdx: rows && rows.length ? 0 : null, dataUrl }); },
     setActiveRowIdx(i)                         { setState({ activeRowIdx: i }); },
     setSelection(sel)                          { setState({ selection: sel }); },
-    setViewMode(mode)                          { setState({ viewMode: mode }); }
+    setViewMode(mode)                          { setState({ viewMode: mode }); },
+    setPanelUnit(panel, unit)                  { setState({ panelUnits: { ...state.panelUnits, [panel]: unit } }); }
   };
 
   return { getState, setState, subscribe, actions };
