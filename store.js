@@ -5,14 +5,22 @@ import { encode as encodeShare, decode as decodeShare } from './model/share-url.
 const DEBOUNCE_MS = 250;
 
 /**
+ * Starter CSV when nothing is loaded yet: 2 columns, 1 empty row, so the user
+ * can immediately edit a cell instead of starting from an empty-state prompt.
+ */
+export function defaultCsvRows() {
+  return [{ col1: '', col2: '' }];
+}
+
+/**
  * Create a new store. Exported as a factory for testability;
  * the production singleton is `store` (see bottom of file).
  */
 export function createStore(initial = {}) {
   let state = {
     template: initial.template ?? Template.create(),
-    csvRows: initial.csvRows ?? null,
-    activeRowIdx: initial.activeRowIdx ?? null,
+    csvRows: initial.csvRows ?? defaultCsvRows(),
+    activeRowIdx: initial.activeRowIdx ?? 0,
     selection: initial.selection ?? null,
     dataUrl: initial.dataUrl ?? null,
     viewMode: initial.viewMode ?? 'single', // 'single' | 'grid'

@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import Papa from 'papaparse';
-import { store } from '../store.js';
+import { store, defaultCsvRows } from '../store.js';
 import { iconChevronDown, iconTrash, iconFolderOpen } from './icons.js';
 
 /**
@@ -278,8 +278,9 @@ class CsvImporter extends LitElement {
   }
 
   _onClear() {
-    store.actions.setCsvRows(null, null);
-    this._columns = [];
+    const rows = defaultCsvRows();
+    store.actions.setCsvRows(rows, null);
+    this._columns = Object.keys(rows[0]);
     this._textBuffer = '';
     this._error = '';
   }

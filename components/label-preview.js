@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { renderLabelEditor, renderLabelToString, renderSheet, renderSheetToString } from '../render/svg.js';
 import { encode as encodeShare } from '../model/share-url.js';
 import { validate as validateTemplate, create as createTemplate } from '../model/template.js';
-import { store } from '../store.js';
+import { store, defaultCsvRows } from '../store.js';
 import {
   iconSquare, iconGrid, iconImage, iconPrinter,
   iconSave, iconFolderOpen, iconLink, iconLink2, iconFilePlus
@@ -259,7 +259,7 @@ class LabelPreview extends LitElement {
   _newSession() {
     if (!confirm('Start a new session? This will discard the current label and any loaded CSV data.')) return;
     store.actions.setTemplate(createTemplate());
-    store.actions.setCsvRows(null, null);
+    store.actions.setCsvRows(defaultCsvRows(), null);
     store.actions.setSelection(null);
     store.actions.setViewMode('single');
     // Strip the URL hash so a refresh would not restore stale state. The
@@ -397,7 +397,9 @@ class LabelPreview extends LitElement {
       `}
 
       <div class="footer">
-        ${csvRows ? `Row ${activeRowIdx + 1} of ${csvRows.length}` : 'No data loaded'}
+        ${csvRows && csvRows.length > 0
+          ? `Row ${(activeRowIdx ?? 0) + 1} of ${csvRows.length}`
+          : ''}
       </div>
     `;
   }
