@@ -87,6 +87,7 @@ class CsvImporter extends LitElement {
       cursor: pointer;
       font: inherit;
       font-size: var(--font-size-sm);
+      margin-left: auto;
     }
     .upload-btn:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
     .upload-btn input { display: none; }
@@ -101,7 +102,7 @@ class CsvImporter extends LitElement {
       font-size: var(--font-size-sm);
     }
     .add-btn:hover { background: var(--color-accent-soft); border-color: var(--color-accent); }
-    .clear-btn { color: var(--color-danger); margin-left: auto; }
+    .clear-btn { color: var(--color-danger); }
     .clear-btn:hover { background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg)); border-color: var(--color-danger); }
 
     .banner {
@@ -362,11 +363,6 @@ class CsvImporter extends LitElement {
               <button aria-pressed=${this._viewMode === 'table'} @click=${() => this._setMode('table')}>Table</button>
               <button aria-pressed=${this._viewMode === 'text'}  @click=${() => this._setMode('text')}>Text</button>
             </div>
-            <label class="upload-btn" title="Upload a .csv file (replaces current data)">
-              ${iconFolderOpen}
-              <span>Upload .csv</span>
-              <input type="file" accept=".csv,text/csv" @change=${this._onFile}>
-            </label>
             ${this._viewMode === 'table' ? html`
               <button class="add-btn" @click=${this._addRow}>+ Row</button>
               <button class="add-btn" @click=${this._addColumn}>+ Column</button>
@@ -374,6 +370,11 @@ class CsvImporter extends LitElement {
             ${hasData || hasColumns ? html`
               <button class="clear-btn" @click=${this._onClear}>Clear</button>
             ` : ''}
+            <label class="upload-btn" title="Upload a .csv file (replaces current data)">
+              ${iconFolderOpen}
+              <span>Upload .csv</span>
+              <input type="file" accept=".csv,text/csv" @change=${this._onFile}>
+            </label>
           </div>
 
           ${this._viewMode === 'table'
