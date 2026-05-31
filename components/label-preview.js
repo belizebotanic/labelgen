@@ -44,6 +44,7 @@ class LabelPreview extends LitElement {
       display: flex;
       gap: var(--space-1);
       align-items: center;
+      flex-wrap: wrap;
       margin-left: auto;
     }
 

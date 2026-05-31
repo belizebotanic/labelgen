@@ -47,8 +47,8 @@ class LabelgenApp extends LitElement {
       grid-template-areas:
         "preview properties"
         "csv     properties";
-      grid-template-columns: 1fr 320px;
-      grid-template-rows: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-rows: minmax(0, 1fr) auto;
       gap: var(--space-3);
       padding: var(--space-3);
       height: 100%;
@@ -60,6 +60,23 @@ class LabelgenApp extends LitElement {
     .properties { grid-area: properties; overflow: auto; min-width: 0;
                   display: flex; flex-direction: column; gap: var(--space-3); }
     .csv        { grid-area: csv; }
+
+    /* Narrow viewports (phones, narrow browser windows, portrait tablets):
+       stack everything full-width. The preview region sizes to its content
+       instead of grabbing 1fr of the viewport height. */
+    @media (max-width: 900px) {
+      :host {
+        grid-template-areas:
+          "preview"
+          "properties"
+          "csv";
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        height: auto;
+        min-height: 100%;
+      }
+      .preview, .properties { overflow: visible; }
+    }
   `;
 
   render() {
