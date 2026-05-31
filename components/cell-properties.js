@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../store.js';
+import { iconTrash } from './icons.js';
 
 class CellProperties extends LitElement {
   static properties = { state: { type: Object } };
@@ -21,6 +22,10 @@ class CellProperties extends LitElement {
     }
     .actions button {
       flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-1);
       padding: var(--space-1) var(--space-2);
       border: var(--border);
       border-radius: var(--radius-sm);
@@ -29,6 +34,7 @@ class CellProperties extends LitElement {
       font: inherit;
       color: var(--color-danger);
     }
+    .actions button svg { flex: none; }
     .actions button:not(:disabled):hover {
       background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg));
       border-color: var(--color-danger);
@@ -100,10 +106,10 @@ class CellProperties extends LitElement {
         <div class="actions">
           <button ?disabled=${!canRemoveCell}
                   title=${canRemoveCell ? 'Remove this cell' : 'Cannot remove the only cell in a row'}
-                  @click=${this._removeCell}>Remove cell</button>
+                  @click=${this._removeCell}>${iconTrash}<span>Cell</span></button>
           <button ?disabled=${!canRemoveRow}
-                  title=${canRemoveRow ? 'Remove this row' : 'Cannot remove the only row in a band'}
-                  @click=${this._removeRow}>Remove row</button>
+                  title=${canRemoveRow ? 'Remove this row' : 'Cannot remove the only row'}
+                  @click=${this._removeRow}>${iconTrash}<span>Row</span></button>
         </div>
         <div class="row full"><label>Text (supports {{placeholders}})</label></div>
         <div class="row full"><textarea .value=${cell.text} @input=${(e) => this._patch({ text: e.target.value })}></textarea></div>

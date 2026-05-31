@@ -9,7 +9,6 @@ import './components/label-panel.js';
 import './components/cell-properties.js';
 import './components/fields-panel.js';
 import './components/csv-importer.js';
-import './components/export-bar.js';
 
 class LabelgenApp extends LitElement {
   static properties = { state: { state: true } };
@@ -47,10 +46,9 @@ class LabelgenApp extends LitElement {
       display: grid;
       grid-template-areas:
         "preview properties"
-        "csv     csv"
-        "export  export";
+        "csv     properties";
       grid-template-columns: 1fr 320px;
-      grid-template-rows: 1fr auto auto;
+      grid-template-rows: 1fr auto;
       gap: var(--space-3);
       padding: var(--space-3);
       height: 100%;
@@ -58,12 +56,10 @@ class LabelgenApp extends LitElement {
     }
     .preview    { grid-area: preview;    overflow: auto; min-width: 0;
                   background: var(--color-surface);
-                  border: var(--border); border-radius: var(--radius-md);
-                  padding: var(--space-3); }
+                  border: var(--border); border-radius: var(--radius-md); }
     .properties { grid-area: properties; overflow: auto; min-width: 0;
                   display: flex; flex-direction: column; gap: var(--space-3); }
     .csv        { grid-area: csv; }
-    .export     { grid-area: export; }
   `;
 
   render() {
@@ -79,9 +75,6 @@ class LabelgenApp extends LitElement {
       </div>
       <div class="csv">
         <csv-importer .state=${this.state}></csv-importer>
-      </div>
-      <div class="export">
-        <export-bar .state=${this.state}></export-bar>
       </div>
     `;
   }

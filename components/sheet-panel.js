@@ -21,7 +21,7 @@ class SheetPanel extends LitElement {
       align-items: center;
     }
     label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
-    input { width: 100%; padding: var(--space-1) var(--space-2); border: var(--border); border-radius: var(--radius-sm); font: inherit; }
+    input { padding: var(--space-1) var(--space-2); border: var(--border); border-radius: var(--radius-sm); font: inherit; }
   `;
 
   _onNum(key) {

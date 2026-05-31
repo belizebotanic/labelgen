@@ -10,7 +10,7 @@ class LabelPanel extends LitElement {
     h3 { margin: 0 0 var(--space-2); font-size: var(--font-size-base); }
     .row { display: grid; grid-template-columns: 1fr 90px; gap: var(--space-2); margin-bottom: var(--space-1); align-items: center; }
     label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
-    input { width: 100%; padding: var(--space-1) var(--space-2); border: var(--border); border-radius: var(--radius-sm); font: inherit; }
+    input { padding: var(--space-1) var(--space-2); border: var(--border); border-radius: var(--radius-sm); font: inherit; }
   `;
 
   _onNum(key) {
