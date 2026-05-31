@@ -8,6 +8,7 @@ class CsvImporter extends LitElement {
 
   static styles = css`
     :host { display: block; }
+    * { box-sizing: border-box; }
     .panel { background: var(--color-surface); border: var(--border); border-radius: var(--radius-md); padding: var(--space-3); }
     h3 { margin: 0 0 var(--space-2); font-size: var(--font-size-base); }
     .controls { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); align-items: center; }

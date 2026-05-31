@@ -1,11 +1,11 @@
 import { LitElement, html, css } from 'lit';
 import { renderLabelEditor, renderLabelToString, renderSheet, renderSheetToString } from '../render/svg.js';
 import { encode as encodeShare } from '../model/share-url.js';
-import { validate as validateTemplate } from '../model/template.js';
+import { validate as validateTemplate, create as createTemplate } from '../model/template.js';
 import { store } from '../store.js';
 import {
   iconSquare, iconGrid, iconImage, iconPrinter,
-  iconSave, iconFolderOpen, iconLink, iconLink2
+  iconSave, iconFolderOpen, iconLink, iconLink2, iconFilePlus
 } from './icons.js';
 
 const URL_WARN_LEN = 1500;
@@ -244,6 +244,18 @@ class LabelPreview extends LitElement {
     setTimeout(() => { this._toast = ''; }, 1500);
   }
 
+  _newSession() {
+    if (!confirm('Start a new session? This will discard the current label and any loaded CSV data.')) return;
+    store.actions.setTemplate(createTemplate());
+    store.actions.setCsvRows(null, null);
+    store.actions.setSelection(null);
+    store.actions.setViewMode('single');
+    // Strip the URL hash so a refresh would not restore stale state. The
+    // store's auto-save will rewrite the hash from the new default template
+    // ~250ms later; that is the intended fresh-state link.
+    history.replaceState(null, '', location.pathname);
+  }
+
   _downloadText(filename, text, mime = 'application/octet-stream') {
     const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
@@ -335,6 +347,8 @@ class LabelPreview extends LitElement {
           ${this._toast ? html`<span class="toast">${this._toast}</span>` : ''}
         </div>
         <div class="header-right">
+          <button class="action-btn" title="Start a new session (clears the current label and CSV)"
+                  @click=${this._newSession}>${iconFilePlus}</button>
           <button class="action-btn" title="Export current label as SVG"
                   @click=${this._exportLabel}>${iconImage}</button>
           <button class="action-btn" title="Export full sheet of labels as SVG"

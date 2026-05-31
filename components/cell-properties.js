@@ -1,14 +1,31 @@
 import { LitElement, html, css } from 'lit';
 import { store } from '../store.js';
-import { iconTrash } from './icons.js';
+import { iconTrash, iconChevronDown } from './icons.js';
 
 class CellProperties extends LitElement {
   static properties = { state: { type: Object } };
 
   static styles = css`
     :host { display: block; }
-    .panel { background: var(--color-surface); border: var(--border); border-radius: var(--radius-md); padding: var(--space-3); }
-    h3 { margin: 0 0 var(--space-2); font-size: var(--font-size-base); }
+    * { box-sizing: border-box; }
+    details {
+      background: var(--color-surface);
+      border: var(--border);
+      border-radius: var(--radius-md);
+    }
+    summary {
+      padding: var(--space-2) var(--space-3);
+      cursor: pointer;
+      list-style: none;
+      display: flex; align-items: center; justify-content: space-between;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary h3 { margin: 0; font-size: var(--font-size-base); }
+    summary .chev { transition: transform 120ms ease-out; color: var(--color-text-muted); display: inline-flex; }
+    details:not([open]) summary .chev { transform: rotate(-90deg); }
+    .body { padding: 0 var(--space-3) var(--space-3); }
+
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-bottom: var(--space-1); align-items: center; }
     .full { grid-column: 1 / -1; }
     label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
@@ -91,8 +108,14 @@ class CellProperties extends LitElement {
 
   render() {
     const cell = this._cell;
+    const summary = html`<summary><h3>Cell properties</h3><span class="chev">${iconChevronDown}</span></summary>`;
     if (!cell) {
-      return html`<div class="panel"><h3>Cell properties</h3><div class="empty">Click a cell in the preview to edit.</div></div>`;
+      return html`
+        <details open>
+          ${summary}
+          <div class="body"><div class="empty">Click a cell in the preview to edit.</div></div>
+        </details>
+      `;
     }
     const [r] = this._selectedPath;
     const t = this.state.template;
@@ -101,43 +124,45 @@ class CellProperties extends LitElement {
     const canRemoveCell = cellCount > 1;
     const canRemoveRow  = rowCount  > 1;
     return html`
-      <div class="panel">
-        <h3>Cell properties</h3>
-        <div class="actions">
-          <button ?disabled=${!canRemoveCell}
-                  title=${canRemoveCell ? 'Remove this cell' : 'Cannot remove the only cell in a row'}
-                  @click=${this._removeCell}>${iconTrash}<span>Cell</span></button>
-          <button ?disabled=${!canRemoveRow}
-                  title=${canRemoveRow ? 'Remove this row' : 'Cannot remove the only row'}
-                  @click=${this._removeRow}>${iconTrash}<span>Row</span></button>
+      <details open>
+        ${summary}
+        <div class="body">
+          <div class="actions">
+            <button ?disabled=${!canRemoveCell}
+                    title=${canRemoveCell ? 'Remove this cell' : 'Cannot remove the only cell in a row'}
+                    @click=${this._removeCell}>${iconTrash}<span>Cell</span></button>
+            <button ?disabled=${!canRemoveRow}
+                    title=${canRemoveRow ? 'Remove this row' : 'Cannot remove the only row'}
+                    @click=${this._removeRow}>${iconTrash}<span>Row</span></button>
+          </div>
+          <div class="row full"><label>Text (supports {{placeholders}})</label></div>
+          <div class="row full"><textarea .value=${cell.text} @input=${(e) => this._patch({ text: e.target.value })}></textarea></div>
+          <div class="row">
+            <label>Align</label>
+            <select .value=${cell.align} @change=${(e) => this._patch({ align: e.target.value })}>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+          <div class="row">
+            <label>Italic</label>
+            <input type="checkbox" .checked=${cell.italic} @change=${(e) => this._patch({ italic: e.target.checked })}>
+          </div>
+          <div class="row">
+            <label>Bold</label>
+            <input type="checkbox" .checked=${cell.bold} @change=${(e) => this._patch({ bold: e.target.checked })}>
+          </div>
+          <div class="row">
+            <label>Font size override (pt)</label>
+            <input type="number" min="1" .value=${cell.font_size_pt ?? ''}
+                   @change=${(e) => {
+                     const v = parseFloat(e.target.value);
+                     this._patch({ font_size_pt: Number.isFinite(v) ? v : undefined });
+                   }}>
+          </div>
         </div>
-        <div class="row full"><label>Text (supports {{placeholders}})</label></div>
-        <div class="row full"><textarea .value=${cell.text} @input=${(e) => this._patch({ text: e.target.value })}></textarea></div>
-        <div class="row">
-          <label>Align</label>
-          <select .value=${cell.align} @change=${(e) => this._patch({ align: e.target.value })}>
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-          </select>
-        </div>
-        <div class="row">
-          <label>Italic</label>
-          <input type="checkbox" .checked=${cell.italic} @change=${(e) => this._patch({ italic: e.target.checked })}>
-        </div>
-        <div class="row">
-          <label>Bold</label>
-          <input type="checkbox" .checked=${cell.bold} @change=${(e) => this._patch({ bold: e.target.checked })}>
-        </div>
-        <div class="row">
-          <label>Font size override (pt)</label>
-          <input type="number" min="1" .value=${cell.font_size_pt ?? ''}
-                 @change=${(e) => {
-                   const v = parseFloat(e.target.value);
-                   this._patch({ font_size_pt: Number.isFinite(v) ? v : undefined });
-                 }}>
-        </div>
-      </div>
+      </details>
     `;
   }
 }
