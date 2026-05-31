@@ -39,4 +39,6 @@ html, body {
   height: 100%;
 }
 
-labelgen-app { display: block; height: 100%; }
+/* `labelgen-app` sets its own display/height via :host inside its
+   shadow root. We only need to make sure the host has somewhere to
+   live; the body's height: 100% above handles that. */
